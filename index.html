@@ -1,0 +1,2443 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PEAK store</title>
+<meta name="description" content="PEAK store — tecnología y más a precios increíbles.">
+<style>
+  /* ============ TOKENS ============ */
+  :root{
+    --ink:#0A0A0A;
+    --paper:#FAFAF8;
+    --graphite:#1C1C1C;
+    --line:#1c1c1c1a;
+    --line-strong:#0A0A0A33;
+    --bolt:#E8FF00;
+    --bolt-ink:#0A0A0A;
+    --grey-mid:#6b6b66;
+    --grey-soft:#9a9a94;
+    --radius:2px;
+    --max:1280px;
+    --ease:cubic-bezier(.16,1,.3,1);
+  }
+
+  *{margin:0;padding:0;box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{
+    background:var(--paper);
+    color:var(--ink);
+    font-family:'PEAK-Body', Arial, Helvetica, sans-serif;
+    -webkit-font-smoothing:antialiased;
+    overflow-x:hidden;
+  }
+
+  /* Display face built from system stack, used only for headings, heavy tracking */
+  .display{
+    font-family:'Arial Black','Helvetica Neue',Arial,sans-serif;
+    font-weight:900;
+    letter-spacing:-0.02em;
+    text-transform:uppercase;
+    line-height:0.92;
+  }
+  .mono{
+    font-family:'Courier New',monospace;
+    letter-spacing:0.04em;
+    text-transform:uppercase;
+    font-size:11px;
+  }
+
+  a{color:inherit;text-decoration:none;}
+  button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit;}
+  ul{list-style:none;}
+  img{display:block;max-width:100%;}
+
+  ::selection{background:var(--bolt);color:var(--bolt-ink);}
+
+  /* Reduced motion */
+  @media (prefers-reduced-motion: reduce){
+    *{animation-duration:0.01ms !important; animation-iteration-count:1 !important; transition-duration:0.01ms !important; scroll-behavior:auto !important;}
+  }
+
+  .wrap{max-width:var(--max);margin:0 auto;padding:0 28px;}
+
+  /* ============ RIDGE LINE (signature) ============ */
+  /* a thin mountain-profile line used as a recurring motif */
+  .ridge{
+    width:100%;
+    height:14px;
+    display:block;
+  }
+  .ridge svg{width:100%;height:100%;display:block;}
+  .ridge path{stroke:var(--ink);stroke-width:1;fill:none;}
+
+  /* ============ HEADER ============ */
+  header{
+    position:sticky;top:0;z-index:500;
+    background:var(--paper);
+    border-bottom:1px solid var(--line-strong);
+  }
+  .topbar{
+    display:flex;align-items:center;justify-content:space-between;
+    padding:18px 28px;
+    max-width:var(--max);margin:0 auto;
+    gap:24px;
+  }
+  .brand{
+    display:flex;align-items:baseline;gap:10px;cursor:pointer;
+  }
+  .brand .display{font-size:26px;}
+  .brand .display span{display:inline-block;transform:skewX(-6deg) translateY(-1px);}
+  .brand .tagline{font-size:9px;color:var(--grey-mid);letter-spacing:.12em;text-transform:uppercase;display:none;}
+  .brand-logo-img{height:34px;width:auto;max-width:160px;object-fit:contain;display:block;}
+
+  nav.primary{display:flex;align-items:center;gap:30px;flex:1;justify-content:center;}
+  nav.primary a{
+    font-size:12px;letter-spacing:.08em;text-transform:uppercase;font-weight:700;
+    position:relative;padding:6px 0;
+  }
+  nav.primary a::after{
+    content:'';position:absolute;left:0;bottom:0;width:0;height:2px;background:var(--bolt);
+    transition:width .25s var(--ease);
+  }
+  nav.primary a:hover::after, nav.primary a.active::after{width:100%;}
+
+  .top-actions{display:flex;align-items:center;gap:18px;}
+  .icon-btn{
+    width:38px;height:38px;display:flex;align-items:center;justify-content:center;
+    border:1px solid var(--line-strong);border-radius:var(--radius);
+    position:relative;transition:background .2s, color .2s;
+  }
+  .icon-btn:hover{background:var(--ink);color:var(--paper);}
+  .icon-btn svg{width:17px;height:17px;}
+  .cart-count{
+    position:absolute;top:-7px;right:-7px;
+    background:var(--bolt);color:var(--bolt-ink);
+    font-size:10px;font-weight:800;
+    min-width:18px;height:18px;border-radius:50%;
+    display:flex;align-items:center;justify-content:center;
+    border:1px solid var(--ink);
+  }
+  .burger{display:none;}
+
+  /* ============ MOBILE NAV ============ */
+  @media (max-width:920px){
+    nav.primary{
+      display:none;
+    }
+    .burger{
+      display:flex;width:38px;height:38px;align-items:center;justify-content:center;
+      border:1px solid var(--line-strong);
+    }
+    .mobile-menu{
+      position:fixed;inset:0 0 0 auto;width:84vw;max-width:340px;height:100vh;
+      background:var(--paper);z-index:900;
+      transform:translateX(100%);transition:transform .35s var(--ease);
+      border-left:1px solid var(--line-strong);
+      display:flex;flex-direction:column;
+      overflow-y:auto;
+    }
+    .mobile-menu.open{transform:translateX(0);}
+    .mobile-menu .mm-head{display:flex;justify-content:flex-end;padding:18px;}
+    .mobile-menu nav{display:flex;flex-direction:column;padding:0 28px;gap:2px;}
+    .mobile-menu nav a{
+      font-size:20px;text-transform:uppercase;font-weight:800;
+      padding:16px 0;border-bottom:1px solid var(--line);
+    }
+    .mm-overlay{
+      position:fixed;inset:0;background:var(--ink);opacity:0;
+      transition:opacity .3s;pointer-events:none;z-index:899;
+    }
+    .mm-overlay.open{opacity:.45;pointer-events:auto;}
+  }
+
+  /* ============ HERO ============ */
+  .hero{
+    position:relative;
+    padding:64px 0 0;
+    overflow:hidden;
+  }
+  .hero-grid{
+    max-width:var(--max);margin:0 auto;padding:0 28px;
+    display:grid;grid-template-columns:1.1fr .9fr;gap:40px;
+    align-items:center;
+    min-height:560px;
+  }
+  .hero-eyebrow{
+    display:inline-flex;align-items:center;gap:8px;
+    font-size:11px;letter-spacing:.14em;text-transform:uppercase;font-weight:700;
+    margin-bottom:22px;color:var(--graphite);
+  }
+  .hero-eyebrow::before{
+    content:'';width:8px;height:8px;background:var(--bolt);border-radius:50%;
+    box-shadow:0 0 0 3px var(--paper),0 0 0 4px var(--ink);
+  }
+  .hero h1{
+    font-size:clamp(44px,7vw,92px);
+    margin-bottom:24px;
+  }
+  .hero h1 .accent{color:var(--ink);-webkit-text-stroke:0;}
+  .hero h1 .bolt-word{
+    background:var(--bolt);padding:0 .15em;display:inline-block;
+  }
+  .hero p.lede{
+    font-size:17px;line-height:1.6;color:var(--graphite);max-width:480px;margin-bottom:32px;
+  }
+  .hero-ctas{display:flex;gap:14px;flex-wrap:wrap;}
+  .btn{
+    display:inline-flex;align-items:center;gap:10px;
+    padding:16px 28px;
+    font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;
+    border:1px solid var(--ink);
+    transition:transform .2s var(--ease), background .2s, color .2s;
+  }
+  .btn-solid{background:var(--ink);color:var(--paper);}
+  .btn-solid:hover{transform:translate(-3px,-3px);box-shadow:3px 3px 0 var(--bolt);}
+  .btn-ghost{background:transparent;color:var(--ink);}
+  .btn-ghost:hover{transform:translate(-3px,-3px);box-shadow:3px 3px 0 var(--ink);}
+
+  .hero-visual{
+    position:relative;
+    aspect-ratio:1/1.05;
+    background:var(--ink);
+    border-radius:var(--radius);
+    overflow:hidden;
+    display:flex;align-items:center;justify-content:center;
+  }
+  .hero-visual .peak-mark{
+    width:62%;
+    filter:invert(1);
+    opacity:.95;
+  }
+  .hero-visual::after{
+    content:'';position:absolute;inset:0;
+    background:linear-gradient(160deg, transparent 40%, var(--bolt) 230%);
+    mix-blend-mode:normal;opacity:.04;
+  }
+  .hero-stats{
+    position:absolute;bottom:18px;left:18px;right:18px;
+    display:flex;justify-content:space-between;
+    color:var(--paper);
+  }
+  .hero-stats .stat{font-size:10px;letter-spacing:.1em;text-transform:uppercase;opacity:.7;}
+  .hero-stats .stat b{display:block;font-size:20px;color:var(--paper);font-family:'Arial Black',sans-serif;}
+
+  @media (max-width:920px){
+    .hero-grid{grid-template-columns:1fr;min-height:auto;padding-top:8px;}
+    .hero-visual{aspect-ratio:16/10;order:-1;}
+  }
+
+  /* ============ SECTION HEADERS ============ */
+  .section{padding:90px 0;}
+  .section-head{
+    display:flex;justify-content:space-between;align-items:flex-end;
+    margin-bottom:48px;gap:24px;flex-wrap:wrap;
+  }
+  .section-head h2{font-size:clamp(30px,4.2vw,52px);}
+  .section-head .sub{font-size:14px;color:var(--grey-mid);max-width:360px;line-height:1.5;}
+  .section-tag{
+    font-size:11px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;
+    color:var(--grey-mid);margin-bottom:10px;display:block;
+  }
+  .section-tag::before{content:'— ';}
+
+  /* ============ CATEGORY GRID ============ */
+  .cat-grid{
+    display:grid;grid-template-columns:repeat(4,1fr);gap:1px;
+    background:var(--line-strong);
+    border:1px solid var(--line-strong);
+  }
+  .cat-card{
+    background:var(--paper);
+    padding:28px 22px;
+    min-height:230px;
+    display:flex;flex-direction:column;justify-content:space-between;
+    cursor:pointer;
+    transition:background .25s, color .25s;
+    position:relative;
+  }
+  .cat-card:hover{background:var(--ink);color:var(--paper);}
+  .cat-card:hover .cat-arrow{transform:translate(4px,-4px);}
+  .cat-card .cat-altitude{font-size:10px;letter-spacing:.1em;text-transform:uppercase;opacity:.55;}
+  .cat-card h3{font-size:21px;margin:14px 0 6px;text-transform:uppercase;font-weight:800;letter-spacing:-0.01em;}
+  .cat-card .cat-count{font-size:12px;opacity:.6;}
+  .cat-arrow{
+    align-self:flex-end;width:30px;height:30px;
+    border:1px solid currentColor;border-radius:50%;
+    display:flex;align-items:center;justify-content:center;
+    transition:transform .25s var(--ease);
+  }
+  .cat-arrow svg{width:13px;height:13px;}
+
+  @media (max-width:920px){.cat-grid{grid-template-columns:repeat(2,1fr);}}
+  @media (max-width:560px){.cat-grid{grid-template-columns:1fr;}}
+
+  /* ============ FILTER BAR ============ */
+  .filter-bar{
+    display:flex;align-items:center;gap:10px;flex-wrap:wrap;
+    padding:18px 0;border-bottom:1px solid var(--line-strong);margin-bottom:36px;
+  }
+  .chip{
+    padding:9px 18px;border:1px solid var(--line-strong);
+    font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;
+    border-radius:30px;transition:background .2s,color .2s;
+    white-space:nowrap;
+  }
+  .chip:hover{border-color:var(--ink);}
+  .chip.active{background:var(--ink);color:var(--paper);border-color:var(--ink);}
+  .search-mini{
+    margin-left:auto;display:flex;align-items:center;gap:8px;
+    border:1px solid var(--line-strong);border-radius:30px;padding:9px 16px;
+    min-width:220px;
+  }
+  .search-mini input{border:none;background:none;outline:none;font-size:13px;width:100%;color:var(--ink);}
+  .search-mini svg{width:14px;height:14px;flex-shrink:0;opacity:.6;}
+
+  /* ============ PRODUCT GRID ============ */
+  .prod-grid{
+    display:grid;grid-template-columns:repeat(4,1fr);gap:28px;
+  }
+  @media (max-width:1080px){.prod-grid{grid-template-columns:repeat(3,1fr);}}
+  @media (max-width:760px){.prod-grid{grid-template-columns:repeat(2,1fr);gap:18px;}}
+  @media (max-width:440px){.prod-grid{grid-template-columns:1fr;}}
+
+  .prod-card{
+    cursor:pointer;
+    display:flex;flex-direction:column;
+  }
+  .prod-thumb{
+    aspect-ratio:1/1;background:var(--graphite);position:relative;overflow:hidden;
+    margin-bottom:14px;border:1px solid var(--line-strong);
+  }
+  .prod-thumb img{width:100%;height:100%;object-fit:cover;transition:transform .5s var(--ease);}
+  .prod-card:hover .prod-thumb img{transform:scale(1.06);}
+  .prod-thumb .stock-flag{
+    position:absolute;top:10px;left:10px;
+    background:var(--bolt);color:var(--bolt-ink);
+    font-size:9px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;
+    padding:5px 9px;
+  }
+  .prod-thumb .stock-flag.out{background:var(--ink);color:var(--paper);}
+  .prod-thumb .quick-add{
+    position:absolute;bottom:0;left:0;right:0;
+    background:var(--paper);color:var(--ink);
+    text-align:center;padding:12px;font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;
+    transform:translateY(100%);transition:transform .25s var(--ease);
+    border-top:1px solid var(--ink);
+  }
+  .prod-card:hover .quick-add{transform:translateY(0);}
+  .prod-info .p-cat{font-size:10px;color:var(--grey-mid);letter-spacing:.08em;text-transform:uppercase;margin-bottom:4px;}
+  .prod-info h4{font-size:15px;font-weight:700;margin-bottom:6px;line-height:1.3;}
+  .prod-info .p-price{font-size:16px;font-weight:800;}
+  .prod-info .p-price .old{font-size:12px;color:var(--grey-soft);text-decoration:line-through;font-weight:500;margin-right:6px;}
+  .empty-state{
+    text-align:center;padding:80px 20px;grid-column:1/-1;
+  }
+  .empty-state .display{font-size:24px;margin-bottom:8px;}
+  .empty-state p{color:var(--grey-mid);font-size:14px;}
+
+  /* ============ ABOUT ============ */
+  .about{background:var(--ink);color:var(--paper);}
+  .about .ridge path{stroke:var(--paper);}
+  .about-grid{display:grid;grid-template-columns:.9fr 1.1fr;gap:60px;align-items:start;}
+  .about h2{font-size:clamp(32px,5vw,58px);margin-bottom:28px;}
+  .about p{font-size:16px;line-height:1.75;color:#cfcfca;margin-bottom:18px;}
+  .about .bolt-word{background:var(--bolt);color:var(--bolt-ink);padding:0 .15em;}
+  .pillars{display:grid;grid-template-columns:repeat(2,1fr);gap:1px;background:#ffffff22;border:1px solid #ffffff22;margin-top:30px;}
+  .pillar{padding:20px;background:var(--ink);}
+  .pillar .num{font-family:'Courier New',monospace;font-size:11px;color:var(--bolt);display:block;margin-bottom:8px;}
+  .pillar h5{font-size:13px;text-transform:uppercase;letter-spacing:.05em;font-weight:800;}
+  @media (max-width:920px){.about-grid{grid-template-columns:1fr;gap:36px;}}
+
+  /* logo carousel (fading mix) */
+  .logo-stage{
+    width:100%;aspect-ratio:4488/724;max-height:140px;
+    position:relative;background:#ffffff0d;border:1px solid #ffffff22;
+    margin-bottom:46px;overflow:hidden;
+  }
+  .logo-stage img{
+    position:absolute;inset:0;width:100%;height:100%;object-fit:contain;padding:18px 28px;
+    opacity:0;transition:opacity 1.8s ease-in-out;
+  }
+  .logo-stage img.show{opacity:1;}
+  .logo-stage .lp{position:absolute;bottom:8px;right:10px;display:flex;gap:4px;}
+  .logo-stage .lp span{width:5px;height:5px;border-radius:50%;background:#ffffff44;}
+  .logo-stage .lp span.on{background:var(--bolt);}
+  .logo-stage.empty::before{
+    content:'Sube el logo principal desde el panel admin';
+    position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+    font-size:12px;color:#ffffff55;text-align:center;padding:20px;
+  }
+
+  /* ============ CLIENTS ============ */
+  .clients-strip{
+    border-top:1px solid var(--line-strong);
+  }
+  .clients-track-wrap{overflow:hidden;padding:50px 0;position:relative;}
+  .clients-track-wrap::before,.clients-track-wrap::after{
+    content:'';position:absolute;top:0;bottom:0;width:80px;z-index:2;pointer-events:none;
+  }
+  .clients-track-wrap::before{left:0;background:linear-gradient(90deg,var(--paper),transparent);}
+  .clients-track-wrap::after{right:0;background:linear-gradient(270deg,var(--paper),transparent);}
+  .clients-track{
+    display:flex;gap:64px;align-items:center;
+    width:max-content;
+    will-change:transform;
+  }
+  .clients-track img{height:42px;width:auto;object-fit:contain;filter:grayscale(1);opacity:.75;flex-shrink:0;}
+  .clients-empty{padding:50px 0;text-align:center;color:var(--grey-mid);font-size:13px;}
+
+  /* ============ CONTACT / CTA STRIP ============ */
+  .cta-strip{
+    background:var(--bolt);color:var(--bolt-ink);
+    padding:54px 0;
+  }
+  .cta-strip .wrap{display:flex;justify-content:space-between;align-items:center;gap:24px;flex-wrap:wrap;}
+  .cta-strip h3{font-size:clamp(24px,3.4vw,36px);}
+  .cta-strip .btn{border-color:var(--ink);}
+
+  /* ============ FOOTER ============ */
+  footer{background:var(--ink);color:var(--paper);padding:64px 0 28px;}
+  .foot-grid{display:grid;grid-template-columns:1.4fr 1fr 1fr 1fr;gap:40px;margin-bottom:50px;}
+  footer h6{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:#ffffff66;margin-bottom:16px;}
+  footer ul li{margin-bottom:10px;font-size:14px;color:#d8d8d4;}
+  footer ul li a:hover{color:var(--bolt);}
+  footer p.fdesc{color:#9a9a94;font-size:13px;line-height:1.6;max-width:280px;margin-top:14px;}
+  .foot-bottom{
+    border-top:1px solid #ffffff1a;padding-top:22px;
+    display:flex;justify-content:space-between;flex-wrap:wrap;gap:10px;
+    font-size:11px;color:#88887f;letter-spacing:.04em;
+  }
+  @media (max-width:760px){.foot-grid{grid-template-columns:1fr 1fr;}}
+
+  /* whatsapp floating */
+  .wa-float{
+    position:fixed;bottom:24px;right:24px;z-index:600;
+    width:58px;height:58px;border-radius:50%;
+    background:var(--ink);color:var(--paper);
+    display:flex;align-items:center;justify-content:center;
+    box-shadow:0 6px 20px #0000003a;
+    transition:transform .2s var(--ease);
+  }
+  .wa-float:hover{transform:scale(1.08);}
+  .wa-float svg{width:26px;height:26px;}
+
+  /* ============ MODALS / DRAWERS (shared) ============ */
+  .overlay{
+    position:fixed;inset:0;background:var(--ink);opacity:0;z-index:800;
+    pointer-events:none;transition:opacity .3s;
+  }
+  .overlay.open{opacity:.55;pointer-events:auto;}
+
+  .drawer{
+    position:fixed;top:0;right:0;height:100vh;width:420px;max-width:92vw;
+    background:var(--paper);z-index:850;
+    transform:translateX(100%);transition:transform .4s var(--ease);
+    display:flex;flex-direction:column;
+    box-shadow:-10px 0 30px #00000022;
+  }
+  .drawer.open{transform:translateX(0);}
+  .drawer-head{
+    display:flex;justify-content:space-between;align-items:center;
+    padding:24px 24px 18px;border-bottom:1px solid var(--line-strong);
+  }
+  .drawer-head h3{font-size:20px;text-transform:uppercase;}
+  .close-x{width:34px;height:34px;display:flex;align-items:center;justify-content:center;border:1px solid var(--line-strong);}
+  .close-x:hover{background:var(--ink);color:var(--paper);}
+  .close-x svg{width:14px;height:14px;}
+
+  /* cart drawer */
+  .cart-items{flex:1;overflow-y:auto;padding:18px 24px;}
+  .cart-row{
+    display:grid;grid-template-columns:64px 1fr auto;gap:14px;
+    padding:16px 0;border-bottom:1px solid var(--line);
+    align-items:center;
+  }
+  .cart-row .ci-thumb{width:64px;height:64px;background:var(--graphite);overflow:hidden;}
+  .cart-row .ci-thumb img{width:100%;height:100%;object-fit:cover;}
+  .cart-row .ci-name{font-size:13px;font-weight:700;margin-bottom:4px;}
+  .cart-row .ci-price{font-size:13px;color:var(--grey-mid);}
+  .qty-ctrl{display:flex;align-items:center;gap:8px;margin-top:8px;}
+  .qty-ctrl button{width:22px;height:22px;border:1px solid var(--line-strong);font-size:13px;display:flex;align-items:center;justify-content:center;}
+  .qty-ctrl span{font-size:13px;font-weight:700;min-width:14px;text-align:center;}
+  .ci-remove{font-size:11px;color:var(--grey-mid);text-decoration:underline;margin-top:6px;display:inline-block;}
+  .ci-line-total{font-weight:800;font-size:14px;white-space:nowrap;}
+  .cart-empty{padding:60px 20px;text-align:center;color:var(--grey-mid);font-size:14px;}
+  .cart-footer{padding:22px 24px;border-top:1px solid var(--line-strong);}
+  .cart-total-row{display:flex;justify-content:space-between;font-size:15px;font-weight:800;margin-bottom:16px;text-transform:uppercase;}
+  .cart-total-row span:last-child{font-size:20px;}
+  .field{margin-bottom:14px;}
+  .field label{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--grey-mid);display:block;margin-bottom:6px;font-weight:700;}
+  .field input,.field textarea,.field select{
+    width:100%;padding:12px 14px;border:1px solid var(--line-strong);background:var(--paper);
+    font-size:14px;font-family:inherit;outline:none;border-radius:var(--radius);
+  }
+  .field input:focus,.field textarea:focus,.field select:focus{border-color:var(--ink);}
+  .btn-block{width:100%;justify-content:center;text-align:center;}
+
+  /* product detail modal */
+  .modal{
+    position:fixed;inset:0;z-index:870;display:flex;align-items:center;justify-content:center;
+    padding:24px;pointer-events:none;opacity:0;transition:opacity .3s;
+  }
+  .modal.open{opacity:1;pointer-events:auto;}
+  .modal-card{
+    background:var(--paper);max-width:920px;width:100%;max-height:88vh;overflow-y:auto;
+    display:grid;grid-template-columns:1fr 1fr;position:relative;
+    transform:translateY(16px);transition:transform .35s var(--ease);
+  }
+  .modal.open .modal-card{transform:translateY(0);}
+  .modal-card .m-close{position:absolute;top:16px;right:16px;z-index:5;background:var(--paper);}
+  .modal-img{aspect-ratio:1/1;background:var(--graphite);overflow:hidden;}
+  .modal-img img{width:100%;height:100%;object-fit:cover;}
+  .modal-body{padding:40px 36px;display:flex;flex-direction:column;}
+  .modal-body .p-cat{font-size:11px;color:var(--grey-mid);text-transform:uppercase;letter-spacing:.08em;margin-bottom:10px;}
+  .modal-body h2{font-size:28px;margin-bottom:14px;text-transform:none;letter-spacing:-0.01em;}
+  .modal-body .price{font-size:26px;font-weight:800;margin-bottom:18px;}
+  .modal-body .desc{font-size:14px;line-height:1.7;color:var(--graphite);margin-bottom:26px;}
+  .modal-body .qty-ctrl{margin-bottom:22px;}
+  @media (max-width:680px){.modal-card{grid-template-columns:1fr;}.modal-img{aspect-ratio:16/10;}}
+
+  /* auth drawer */
+  .auth-tabs{display:flex;border-bottom:1px solid var(--line-strong);}
+  .auth-tab{flex:1;text-align:center;padding:16px;font-size:12px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--grey-mid);border-bottom:2px solid transparent;}
+  .auth-tab.active{color:var(--ink);border-color:var(--ink);}
+  .auth-panel{padding:26px 24px;}
+  .auth-msg{font-size:12px;padding:10px 12px;margin-bottom:14px;display:none;border-radius:var(--radius);}
+  .auth-msg.show{display:block;}
+  .auth-msg.err{background:#ffe2e2;color:#7a0000;}
+  .auth-msg.ok{background:#e2ffd8;color:#0a5c00;}
+  .auth-foot{text-align:center;font-size:12px;color:var(--grey-mid);margin-top:14px;}
+  .session-note{font-size:11px;color:var(--grey-mid);text-align:center;margin-top:10px;}
+
+  /* user panel */
+  .user-card{padding:24px;border-bottom:1px solid var(--line-strong);}
+  .user-card .u-name{font-size:18px;font-weight:800;text-transform:uppercase;}
+  .user-card .u-email{font-size:12px;color:var(--grey-mid);}
+  .user-card .u-badge{
+    display:inline-block;margin-top:8px;font-size:10px;font-weight:800;letter-spacing:.06em;
+    text-transform:uppercase;background:var(--bolt);color:var(--bolt-ink);padding:4px 10px;
+  }
+  .menu-list{flex:1;overflow-y:auto;}
+  .menu-list li a, .menu-list li button{
+    width:100%;display:flex;align-items:center;justify-content:space-between;
+    padding:18px 24px;font-size:14px;font-weight:600;border-bottom:1px solid var(--line);
+    text-align:left;
+  }
+  .menu-list li a:hover,.menu-list li button:hover{background:var(--ink);color:var(--paper);}
+
+  /* ============ ADMIN PANEL ============ */
+  .admin-shell{
+    position:fixed;inset:0;background:var(--paper);z-index:950;
+    display:none;flex-direction:column;
+    transform:translateY(100%);transition:transform .4s var(--ease);
+  }
+  .admin-shell.open{display:flex;transform:translateY(0);}
+  .admin-top{
+    display:flex;align-items:center;justify-content:space-between;
+    padding:16px 28px;border-bottom:1px solid var(--line-strong);flex-shrink:0;
+  }
+  .admin-top .display{font-size:20px;}
+  .admin-body{flex:1;display:flex;overflow:hidden;}
+  .admin-nav{
+    width:220px;border-right:1px solid var(--line-strong);flex-shrink:0;overflow-y:auto;
+    padding:18px 0;
+  }
+  .admin-nav button{
+    width:100%;text-align:left;padding:13px 24px;font-size:13px;font-weight:700;
+    display:flex;align-items:center;gap:10px;
+  }
+  .admin-nav button.active{background:var(--ink);color:var(--paper);}
+  .admin-nav button:hover:not(.active){background:var(--line);}
+  .admin-main{flex:1;overflow-y:auto;padding:32px 36px;}
+  .admin-section{display:none;}
+  .admin-section.active{display:block;}
+  .admin-section h2{font-size:24px;margin-bottom:6px;}
+  .admin-section .hint{font-size:13px;color:var(--grey-mid);margin-bottom:26px;}
+
+  .admin-toolbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;gap:12px;flex-wrap:wrap;}
+  .admin-table{width:100%;border-collapse:collapse;font-size:13px;}
+  .admin-table th{
+    text-align:left;padding:10px 12px;font-size:10px;letter-spacing:.06em;text-transform:uppercase;
+    color:var(--grey-mid);border-bottom:1px solid var(--line-strong);
+  }
+  .admin-table td{padding:12px;border-bottom:1px solid var(--line);vertical-align:middle;}
+  .admin-table img{width:42px;height:42px;object-fit:cover;background:var(--graphite);}
+  .row-actions{display:flex;gap:8px;}
+  .row-actions button{font-size:11px;font-weight:700;text-decoration:underline;}
+  .row-actions button.danger{color:#a30000;}
+  .pill-stat{
+    display:inline-block;font-size:10px;font-weight:800;padding:3px 8px;text-transform:uppercase;
+  }
+  .pill-stat.live{background:#dcffd1;color:#0a5c00;}
+  .pill-stat.low{background:#fff3cf;color:#7a5b00;}
+  .pill-stat.out{background:#ffe2e2;color:#7a0000;}
+
+  .admin-card{border:1px solid var(--line-strong);padding:24px;margin-bottom:20px;}
+  .admin-card h4{font-size:14px;text-transform:uppercase;margin-bottom:16px;letter-spacing:.04em;}
+  .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+  .form-grid .full{grid-column:1/-1;}
+  @media (max-width:700px){.form-grid{grid-template-columns:1fr;}}
+
+  .img-drop{
+    border:1.5px dashed var(--line-strong);padding:20px;text-align:center;cursor:pointer;
+    transition:border-color .2s, background .2s;position:relative;
+  }
+  .img-drop:hover{border-color:var(--ink);background:var(--line);}
+  .img-drop input{position:absolute;inset:0;opacity:0;cursor:pointer;}
+  .img-drop .dz-icon{font-size:22px;margin-bottom:6px;}
+  .img-drop .dz-txt{font-size:12px;color:var(--grey-mid);}
+  .img-preview-grid{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px;}
+  .img-preview-grid .ip{
+    width:72px;height:72px;position:relative;border:1px solid var(--line-strong);overflow:hidden;
+  }
+  .img-preview-grid .ip img{width:100%;height:100%;object-fit:cover;}
+  .img-preview-grid .ip button{
+    position:absolute;top:2px;right:2px;background:var(--ink);color:var(--paper);
+    width:18px;height:18px;font-size:11px;display:flex;align-items:center;justify-content:center;
+  }
+
+  .stat-cards{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--line-strong);border:1px solid var(--line-strong);margin-bottom:32px;}
+  .stat-card{background:var(--paper);padding:22px;}
+  .stat-card .sc-label{font-size:11px;text-transform:uppercase;color:var(--grey-mid);letter-spacing:.06em;margin-bottom:8px;}
+  .stat-card .sc-value{font-size:30px;font-weight:800;}
+  @media (max-width:760px){.stat-cards{grid-template-columns:1fr 1fr;} .admin-nav{width:64px;} .admin-nav button span.lbl{display:none;}}
+
+  .toast-stack{position:fixed;bottom:24px;left:24px;z-index:999;display:flex;flex-direction:column;gap:10px;}
+  .toast{
+    background:var(--ink);color:var(--paper);padding:14px 20px;font-size:13px;font-weight:600;
+    border-left:3px solid var(--bolt);min-width:240px;
+    animation:toastIn .3s var(--ease);
+  }
+  @keyframes toastIn{from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:translateY(0);}}
+
+  .config-row{display:flex;justify-content:space-between;align-items:center;padding:14px 0;border-bottom:1px solid var(--line);}
+  .config-row code{font-size:12px;background:var(--line);padding:6px 10px;border-radius:3px;word-break:break-all;}
+  .copy-btn{font-size:11px;font-weight:700;text-decoration:underline;flex-shrink:0;margin-left:12px;}
+
+  .sync-dot{display:inline-flex;align-items:center;gap:6px;font-size:11px;color:var(--grey-mid);}
+  .sync-dot .d{width:7px;height:7px;border-radius:50%;background:var(--grey-soft);}
+  .sync-dot.ok .d{background:#27a313;}
+  .sync-dot.bad .d{background:#c91c1c;}
+
+  .skeleton{background:linear-gradient(90deg,var(--line) 25%,#0000000a 37%,var(--line) 63%);background-size:400% 100%;animation:sk 1.4s ease infinite;}
+  @keyframes sk{0%{background-position:100% 50%;}100%{background-position:0 50%;}}
+</style>
+</head>
+<body>
+
+<!-- ================= HEADER ================= -->
+<header>
+  <div class="topbar">
+    <div class="brand" id="brandLogoWrap" onclick="scrollToSection('home')">
+      <span class="display" id="brandText"><span style="display:inline-block">PEAK</span></span>
+      <img class="brand-logo-img" id="brandLogoImg" src="" alt="PEAK" style="display:none">
+      <span class="tagline">the action!</span>
+    </div>
+
+    <nav class="primary" id="primaryNav">
+      <a href="#home" class="active">Inicio</a>
+      <a href="#tienda">Tienda</a>
+      <a href="#nosotros">Nosotros</a>
+      <a href="#clientes">Clientes</a>
+      <a href="#contacto">Contacto</a>
+    </nav>
+
+    <div class="top-actions">
+      <button class="icon-btn" id="accountBtn" title="Cuenta" aria-label="Cuenta">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.4 3.6-8 8-8s8 3.6 8 8"/></svg>
+      </button>
+      <button class="icon-btn" id="cartBtn" title="Carrito" aria-label="Carrito">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3h2l2.4 12.4a2 2 0 0 0 2 1.6h7.2a2 2 0 0 0 2-1.6L21 8H6"/><circle cx="9" cy="21" r="1"/><circle cx="18" cy="21" r="1"/></svg>
+        <span class="cart-count" id="cartCount" style="display:none">0</span>
+      </button>
+      <button class="burger icon-btn" id="burgerBtn" aria-label="Menú">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
+      </button>
+    </div>
+  </div>
+  <div class="ridge"><svg viewBox="0 0 1200 14" preserveAspectRatio="none"><path d="M0 13 L150 13 L260 2 L340 13 L520 13 L640 4 L700 13 L900 13 L990 1 L1080 13 L1200 13"/></svg></div>
+</header>
+
+<div class="mm-overlay" id="mmOverlay"></div>
+<div class="mobile-menu" id="mobileMenu">
+  <div class="mm-head"><button class="close-x" id="mmClose"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg></button></div>
+  <nav>
+    <a href="#home">Inicio</a>
+    <a href="#tienda">Tienda</a>
+    <a href="#nosotros">Nosotros</a>
+    <a href="#clientes">Clientes</a>
+    <a href="#contacto">Contacto</a>
+  </nav>
+</div>
+
+<!-- ================= HERO ================= -->
+<section class="hero" id="home">
+  <div class="hero-grid">
+    <div>
+      <span class="hero-eyebrow">Tienda en línea · Bogotá, Colombia</span>
+      <h1 class="display">Es hora<br>de <span class="bolt-word">actuar</span><br>YA!</h1>
+      <p class="lede">Tecnología y otros productos a precios increíbles. PEAK conecta logística, diseño y atención 24/7 en una sola tienda que se actualiza en tiempo real.</p>
+      <div class="hero-ctas">
+        <a href="#tienda" class="btn btn-solid">Ver tienda</a>
+        <a href="#nosotros" class="btn btn-ghost">Conócenos</a>
+      </div>
+    </div>
+    <div class="hero-visual">
+      <svg class="peak-mark" viewBox="0 0 200 160" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M10 140 L60 40 L90 90 L120 20 L190 140 Z" stroke="white" stroke-width="6" stroke-linejoin="round" fill="none"/>
+      </svg>
+      <div class="hero-stats">
+        <div class="stat"><b id="statProducts">0</b>Productos</div>
+        <div class="stat"><b id="statCats">0</b>Categorías</div>
+        <div class="stat"><b>24/7</b>Soporte</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= CATEGORIES ================= -->
+<section class="section" id="categorias">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <span class="section-tag">Explora por categoría</span>
+        <h2 class="display">Elige tu pico</h2>
+      </div>
+      <p class="sub">Cada categoría agrupa lo mejor de nuestro catálogo. Toca una para filtrar la tienda al instante.</p>
+    </div>
+    <div class="cat-grid" id="catGrid"></div>
+  </div>
+</section>
+
+<!-- ================= STORE / PRODUCTS ================= -->
+<section class="section" id="tienda" style="padding-top:0">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <span class="section-tag">Catálogo completo</span>
+        <h2 class="display">Tienda PEAK</h2>
+      </div>
+      <span class="sync-dot" id="syncDot"><span class="d"></span><span id="syncTxt">Sincronizando…</span></span>
+    </div>
+
+    <div class="filter-bar" id="filterBar">
+      <button class="chip active" data-filter="todos">Todos</button>
+      <div class="search-mini">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+        <input type="text" id="searchInput" placeholder="Buscar producto…">
+      </div>
+    </div>
+
+    <div class="prod-grid" id="prodGrid">
+      <div class="empty-state">
+        <p class="display">Cargando catálogo…</p>
+        <p>Conectando con el inventario PEAK en tiempo real.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= ABOUT ================= -->
+<section class="section about" id="nosotros">
+  <div class="ridge"><svg viewBox="0 0 1200 14" preserveAspectRatio="none"><path d="M0 1 L150 1 L260 12 L340 1 L520 1 L640 11 L700 1 L900 1 L990 13 L1080 1 L1200 1"/></svg></div>
+  <div class="wrap" style="margin-top:40px">
+    <div class="logo-stage empty" id="logoStage"></div>
+
+    <div class="about-grid">
+      <div>
+        <span class="section-tag" style="color:#ffffff66">Quiénes somos</span>
+        <h2 class="display">Nosotros</h2>
+      </div>
+      <div>
+        <p>PEAK es una empresa <span class="bolt-word">multifuncional</span>: tienda de tecnología y otros productos a precios increíbles, con atención al cliente 24/7 para gestionar compras, envíos y garantías.</p>
+        <p>PEAK también gestiona eventos de marketing, logística, publicidad, diseño, infraestructura y estrategia — y pronto, una escuela para aprender nuevas habilidades.</p>
+        <p style="font-size:20px;font-weight:800;color:var(--paper);text-transform:uppercase;">PEAK the action! Es hora de actuar YA!</p>
+
+        <div class="pillars">
+          <div class="pillar"><span class="num">EVENTOS</span><h5>Marketing & activaciones</h5></div>
+          <div class="pillar"><span class="num">LOGÍSTICA</span><h5>Envíos & operación</h5></div>
+          <div class="pillar"><span class="num">DISEÑO</span><h5>Publicidad & branding</h5></div>
+          <div class="pillar"><span class="num">ESCUELA</span><h5>Próximamente</h5></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= CLIENTS ================= -->
+<section class="clients-strip" id="clientes">
+  <div class="wrap">
+    <div class="section-head" style="margin-bottom:0;padding-top:50px">
+      <div>
+        <span class="section-tag">Confianza</span>
+        <h2 class="display">Clientes que han trabajado con nosotros</h2>
+      </div>
+    </div>
+  </div>
+  <div id="clientsWrap"></div>
+</section>
+
+<!-- ================= CTA STRIP ================= -->
+<section class="cta-strip" id="contacto">
+  <div class="wrap">
+    <h3 class="display">¿Listo para actuar?</h3>
+    <a href="#" id="ctaWhatsapp" class="btn btn-solid" style="background:var(--ink);color:var(--paper)">Escríbenos al WhatsApp</a>
+  </div>
+</section>
+
+<!-- ================= FOOTER ================= -->
+<footer>
+  <div class="wrap">
+    <div class="foot-grid">
+      <div>
+        <span class="display" style="font-size:22px">PEAK</span>
+        <p class="fdesc">Tienda multifuncional de tecnología y más. Eventos, logística, publicidad, diseño, infraestructura y estrategia — todo en un solo lugar.</p>
+      </div>
+      <div>
+        <h6>Tienda</h6>
+        <ul>
+          <li><a href="#tienda">Catálogo</a></li>
+          <li><a href="#categorias">Categorías</a></li>
+          <li id="footAdminLink"><a href="#" onclick="openAdminLogin(event)">Panel admin</a></li>
+        </ul>
+      </div>
+      <div>
+        <h6>Empresa</h6>
+        <ul>
+          <li><a href="#nosotros">Nosotros</a></li>
+          <li><a href="#clientes">Clientes</a></li>
+          <li><a href="#contacto">Contacto</a></li>
+        </ul>
+      </div>
+      <div>
+        <h6>Contacto directo</h6>
+        <ul>
+          <li><a href="#" id="footWhatsapp">WhatsApp 312 545 6301</a></li>
+          <li>Soporte 24/7</li>
+        </ul>
+      </div>
+    </div>
+    <div class="foot-bottom">
+      <span>© <span id="yearNow"></span> PEAK store. Todos los derechos reservados.</span>
+      <span>PEAK the action!</span>
+    </div>
+  </div>
+</footer>
+
+<a href="#" id="waFloat" class="wa-float" title="Escríbenos">
+  <svg viewBox="0 0 24 24" fill="currentColor"><path d="M17.5 14.4c-.3-.1-1.7-.8-2-.9-.3-.1-.5-.1-.6.1-.2.3-.7.9-.9 1-.2.2-.3.2-.6.1-.9-.4-1.8-1-2.5-1.7-.7-.7-1.3-1.6-1.7-2.5-.1-.3 0-.4.1-.6.1-.2.7-.7 1-.9.2-.2.1-.4.1-.6-.1-.3-.8-1.7-.9-2-.1-.3-.3-.3-.5-.3h-.5c-.2 0-.5.1-.7.3-.3.3-1 .9-1 2.2s.9 2.6 1 2.8c.1.2 1.6 2.5 4 3.5 2.3 1 2.3.7 2.7.6.4 0 1.3-.5 1.5-1 .2-.5.2-1 .1-1.1-.1-.1-.2-.1-.5-.2z"/><path d="M20.5 3.5A11 11 0 0 0 3.7 17l-1.2 4.5L7.1 20a11 11 0 0 0 13.4-16.5zM12 20.5a8.4 8.4 0 0 1-4.3-1.2l-.3-.2-3.2.8.9-3.1-.2-.3A8.5 8.5 0 1 1 20.5 12 8.5 8.5 0 0 1 12 20.5z"/></svg>
+</a>
+
+<!-- ================= OVERLAY (shared) ================= -->
+<div class="overlay" id="overlay"></div>
+
+<!-- ================= CART DRAWER ================= -->
+<div class="drawer" id="cartDrawer">
+  <div class="drawer-head">
+    <h3 class="display">Tu carrito</h3>
+    <button class="close-x" onclick="closeAllDrawers()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
+  </div>
+  <div class="cart-items" id="cartItems"></div>
+  <div class="cart-footer" id="cartFooter" style="display:none">
+    <div class="cart-total-row"><span>Total</span><span id="cartTotal">$0</span></div>
+    <div class="field">
+      <label>Tu nombre</label>
+      <input type="text" id="custName" placeholder="¿Cómo te llamas?">
+    </div>
+    <div class="field">
+      <label>Dirección de envío (opcional)</label>
+      <input type="text" id="custAddress" placeholder="Barrio, calle, ciudad…">
+    </div>
+    <button class="btn btn-solid btn-block" onclick="checkoutWhatsapp()">Pedir por WhatsApp</button>
+    <p class="session-note">Te llevaremos a WhatsApp con el resumen y total de tu pedido.</p>
+  </div>
+</div>
+
+<!-- ================= ACCOUNT DRAWER (login/register) ================= -->
+<div class="drawer" id="authDrawer">
+  <div class="drawer-head">
+    <h3 class="display" id="authTitle">Tu cuenta</h3>
+    <button class="close-x" onclick="closeAllDrawers()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
+  </div>
+  <div class="auth-tabs">
+    <button class="auth-tab active" data-tab="login" onclick="switchAuthTab('login')">Iniciar sesión</button>
+    <button class="auth-tab" data-tab="register" onclick="switchAuthTab('register')">Crear cuenta</button>
+  </div>
+
+  <div class="auth-panel" id="loginPanel">
+    <div class="auth-msg" id="loginMsg"></div>
+    <div class="field"><label>Correo</label><input type="email" id="loginEmail" placeholder="tucorreo@email.com"></div>
+    <div class="field"><label>Contraseña</label><input type="password" id="loginPass" placeholder="••••••••"></div>
+    <button class="btn btn-solid btn-block" onclick="doLogin()">Entrar</button>
+    <p class="session-note">Tu sesión se guarda en este dispositivo automáticamente.</p>
+  </div>
+
+  <div class="auth-panel" id="registerPanel" style="display:none">
+    <div class="auth-msg" id="registerMsg"></div>
+    <div class="field"><label>Nombre completo</label><input type="text" id="regName" placeholder="Tu nombre"></div>
+    <div class="field"><label>Correo</label><input type="email" id="regEmail" placeholder="tucorreo@email.com"></div>
+    <div class="field"><label>Celular (WhatsApp)</label><input type="text" id="regPhone" placeholder="3XX XXX XXXX"></div>
+    <div class="field"><label>Contraseña</label><input type="password" id="regPass" placeholder="Mínimo 6 caracteres"></div>
+    <button class="btn btn-solid btn-block" onclick="doRegister()">Crear cuenta</button>
+  </div>
+</div>
+
+<!-- ================= USER PANEL (logged in) ================= -->
+<div class="drawer" id="userDrawer">
+  <div class="drawer-head">
+    <h3 class="display">Mi cuenta</h3>
+    <button class="close-x" onclick="closeAllDrawers()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
+  </div>
+  <div class="user-card">
+    <div class="u-name" id="uName">—</div>
+    <div class="u-email" id="uEmail">—</div>
+    <span class="u-badge" id="uBadge" style="display:none">Administrador</span>
+  </div>
+  <ul class="menu-list">
+    <li id="adminEntry" style="display:none"><button onclick="openAdmin()">Panel de administrador <span>→</span></button></li>
+    <li><button onclick="scrollToSection('tienda');closeAllDrawers()">Ir a la tienda <span>→</span></button></li>
+    <li><button onclick="doLogout()">Cerrar sesión <span>→</span></button></li>
+  </ul>
+</div>
+
+<!-- ================= PRODUCT MODAL ================= -->
+<div class="modal" id="productModal">
+  <div class="modal-card">
+    <button class="close-x m-close" onclick="closeProductModal()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
+    <div class="modal-img"><img id="modalImg" src="" alt=""></div>
+    <div class="modal-body">
+      <span class="p-cat" id="modalCat">—</span>
+      <h2 id="modalName">—</h2>
+      <div class="price" id="modalPrice">$0</div>
+      <p class="desc" id="modalDesc">—</p>
+      <div class="qty-ctrl">
+        <button onclick="modalQty(-1)">−</button>
+        <span id="modalQty">1</span>
+        <button onclick="modalQty(1)">+</button>
+      </div>
+      <button class="btn btn-solid btn-block" id="modalAddBtn" onclick="addToCartFromModal()">Agregar al carrito</button>
+    </div>
+  </div>
+</div>
+
+<!-- ================= ADMIN SHELL ================= -->
+<div class="admin-shell" id="adminShell">
+  <div class="admin-top">
+    <span class="display">Panel PEAK</span>
+    <div style="display:flex;align-items:center;gap:16px">
+      <span class="sync-dot" id="adminSyncDot"><span class="d"></span><span id="adminSyncTxt">Conectando…</span></span>
+      <button class="btn btn-ghost" onclick="closeAdmin()">Salir al sitio</button>
+    </div>
+  </div>
+  <div class="admin-body">
+    <div class="admin-nav" id="adminNav">
+      <button class="active" data-sec="dash"><span>◆</span><span class="lbl">Resumen</span></button>
+      <button data-sec="productos"><span>▣</span><span class="lbl">Productos</span></button>
+      <button data-sec="categorias"><span>▤</span><span class="lbl">Categorías</span></button>
+      <button data-sec="marca"><span>●</span><span class="lbl">Logo & marca</span></button>
+      <button data-sec="clientesadm"><span>★</span><span class="lbl">Clientes (logos)</span></button>
+      <button data-sec="pedidos"><span>▥</span><span class="lbl">Pedidos</span></button>
+      <button data-sec="conexion"><span>▦</span><span class="lbl">Conexión</span></button>
+    </div>
+
+    <div class="admin-main">
+
+      <!-- DASHBOARD -->
+      <div class="admin-section active" id="sec-dash">
+        <h2>Resumen general</h2>
+        <p class="hint">Estado actual de tu tienda PEAK, en vivo desde Google Sheets.</p>
+        <div class="stat-cards">
+          <div class="stat-card"><div class="sc-label">Productos activos</div><div class="sc-value" id="dashProd">0</div></div>
+          <div class="stat-card"><div class="sc-label">Categorías</div><div class="sc-value" id="dashCat">0</div></div>
+          <div class="stat-card"><div class="sc-label">Sin stock</div><div class="sc-value" id="dashOut">0</div></div>
+          <div class="stat-card"><div class="sc-label">Clientes (logos)</div><div class="sc-value" id="dashClients">0</div></div>
+        </div>
+        <div class="admin-card">
+          <h4>Cómo funciona la tienda</h4>
+          <p style="font-size:13px;line-height:1.7;color:var(--graphite)">
+            Todo lo que agregues, edites o borres aquí se guarda en tu Google Sheet conectado y se refleja en la tienda
+            para todos los visitantes en tiempo real (la página consulta el inventario cada vez que alguien la abre y
+            de forma periódica mientras la navegan). No necesitas subir nada a GitHub para actualizar productos — solo
+            usa este panel.
+          </p>
+        </div>
+      </div>
+
+      <!-- PRODUCTOS -->
+      <div class="admin-section" id="sec-productos">
+        <h2>Productos</h2>
+        <p class="hint">Sube fotos, descripción, precio y categoría. Se publican al instante en la tienda.</p>
+
+        <div class="admin-card" id="prodFormCard">
+          <h4 id="prodFormTitle">Nuevo producto</h4>
+          <div class="form-grid">
+            <div class="field"><label>Nombre del producto</label><input type="text" id="pf_name" placeholder="Ej: Audífonos PEAK Pro"></div>
+            <div class="field"><label>Categoría</label><select id="pf_cat"></select></div>
+            <div class="field"><label>Precio (COP)</label><input type="number" id="pf_price" placeholder="Ej: 150000"></div>
+            <div class="field"><label>Precio antes (opcional)</label><input type="number" id="pf_oldprice" placeholder="Ej: 190000"></div>
+            <div class="field"><label>Stock disponible</label><input type="number" id="pf_stock" placeholder="Ej: 12"></div>
+            <div class="field"><label>Estado</label>
+              <select id="pf_status">
+                <option value="activo">Activo</option>
+                <option value="inactivo">Oculto</option>
+              </select>
+            </div>
+            <div class="field full"><label>Descripción</label><textarea id="pf_desc" rows="3" placeholder="Describe el producto…"></textarea></div>
+            <div class="field full">
+              <label>Foto del producto</label>
+              <div class="img-drop" id="pf_dropzone">
+                <input type="file" id="pf_image" accept="image/*">
+                <div class="dz-icon">⤒</div>
+                <div class="dz-txt">Arrastra o toca para subir la foto</div>
+              </div>
+              <div class="img-preview-grid" id="pf_preview"></div>
+            </div>
+          </div>
+          <div style="display:flex;gap:10px;margin-top:18px">
+            <button class="btn btn-solid" onclick="saveProduct()" id="pf_saveBtn">Publicar producto</button>
+            <button class="btn btn-ghost" onclick="resetProductForm()" id="pf_cancelBtn" style="display:none">Cancelar edición</button>
+          </div>
+        </div>
+
+        <div class="admin-toolbar">
+          <h4 style="font-size:14px;text-transform:uppercase">Catálogo (<span id="prodCountLabel">0</span>)</h4>
+          <div class="search-mini" style="min-width:220px"><input type="text" id="prodAdminSearch" placeholder="Buscar en catálogo…"></div>
+        </div>
+        <div style="overflow-x:auto">
+          <table class="admin-table">
+            <thead><tr><th>Foto</th><th>Nombre</th><th>Categoría</th><th>Precio</th><th>Stock</th><th>Estado</th><th></th></tr></thead>
+            <tbody id="adminProdTable"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- CATEGORIAS -->
+      <div class="admin-section" id="sec-categorias">
+        <h2>Categorías</h2>
+        <p class="hint">Organiza tu tienda. Cada categoría aparece como un "pico" navegable en el inicio.</p>
+        <div class="admin-card">
+          <h4>Nueva categoría</h4>
+          <div class="form-grid">
+            <div class="field"><label>Nombre</label><input type="text" id="cf_name" placeholder="Ej: Tecnología"></div>
+            <div class="field"><label>Descripción corta</label><input type="text" id="cf_desc" placeholder="Ej: Lo último en gadgets"></div>
+          </div>
+          <button class="btn btn-solid" onclick="saveCategory()" style="margin-top:14px">Agregar categoría</button>
+        </div>
+        <table class="admin-table">
+          <thead><tr><th>Categoría</th><th>Descripción</th><th>Productos</th><th></th></tr></thead>
+          <tbody id="adminCatTable"></tbody>
+        </table>
+      </div>
+
+      <!-- MARCA / LOGO -->
+      <div class="admin-section" id="sec-marca">
+        <h2>Logo & marca</h2>
+        <p class="hint">El logo principal (4488×724) rota mezclándose entre todas las versiones que subas en "Nosotros". El isologo (1402×1122) se usa como marca de respaldo.</p>
+
+        <div class="admin-card">
+          <h4>Logos principales (horizontal, 4488×724)</h4>
+          <div class="img-drop" id="logo_dropzone">
+            <input type="file" id="logo_image" accept="image/*" multiple>
+            <div class="dz-icon">⤒</div>
+            <div class="dz-txt">Sube uno o varios logos — se mezclan en desvanecido automáticamente</div>
+          </div>
+          <div class="img-preview-grid" id="logo_preview"></div>
+        </div>
+
+        <div class="admin-card">
+          <h4>Isologo (1402×1122)</h4>
+          <div class="img-drop" id="iso_dropzone">
+            <input type="file" id="iso_image" accept="image/*">
+            <div class="dz-icon">⤒</div>
+            <div class="dz-txt">Símbolo / isologo de respaldo</div>
+          </div>
+          <div class="img-preview-grid" id="iso_preview"></div>
+        </div>
+      </div>
+
+      <!-- CLIENTES -->
+      <div class="admin-section" id="sec-clientesadm">
+        <h2>Clientes que han trabajado con nosotros</h2>
+        <p class="hint">Sube los logos de las empresas que avalan a PEAK. Aparecen en una franja deslizante en la página principal.</p>
+        <div class="admin-card">
+          <h4>Agregar logo de cliente</h4>
+          <div class="form-grid">
+            <div class="field full"><label>Nombre del cliente / empresa</label><input type="text" id="clf_name" placeholder="Ej: Bad Bunny Productions"></div>
+            <div class="field full">
+              <label>Logo</label>
+              <div class="img-drop" id="client_dropzone">
+                <input type="file" id="client_image" accept="image/*">
+                <div class="dz-icon">⤒</div>
+                <div class="dz-txt">Sube el logo del cliente</div>
+              </div>
+              <div class="img-preview-grid" id="client_preview"></div>
+            </div>
+          </div>
+          <button class="btn btn-solid" onclick="saveClientLogo()" style="margin-top:14px">Agregar a la franja de clientes</button>
+        </div>
+        <table class="admin-table">
+          <thead><tr><th>Logo</th><th>Nombre</th><th></th></tr></thead>
+          <tbody id="adminClientsTable"></tbody>
+        </table>
+      </div>
+
+      <!-- PEDIDOS -->
+      <div class="admin-section" id="sec-pedidos">
+        <h2>Pedidos recientes</h2>
+        <p class="hint">Cada pedido se envía directo a tu WhatsApp (312 545 6301). Aquí queda un registro local de referencia en este dispositivo.</p>
+        <table class="admin-table">
+          <thead><tr><th>Fecha</th><th>Cliente</th><th>Resumen</th><th>Total</th></tr></thead>
+          <tbody id="adminOrdersTable"><tr><td colspan="4" style="text-align:center;color:var(--grey-mid);padding:30px">Aún no hay pedidos registrados en este dispositivo.</td></tr></tbody>
+        </table>
+      </div>
+
+      <!-- CONEXION -->
+      <div class="admin-section" id="sec-conexion">
+        <h2>Conexión con Google Sheets</h2>
+        <p class="hint">Tu tienda lee y escribe en tiempo real sobre esta hoja de cálculo mediante Google Apps Script.</p>
+        <div class="admin-card">
+          <h4>Datos de conexión</h4>
+          <div class="config-row">
+            <span>ID del Spreadsheet</span>
+            <code id="sheetIdShown">1bjvkKJbobuombZBLiSApj4aVzPemnxBwfSChVZ3g7i4</code>
+          </div>
+          <div class="config-row">
+            <span>URL del Web App (Apps Script)</span>
+            <div style="display:flex;align-items:center;flex:1;justify-content:flex-end">
+              <input type="text" id="webAppUrlInput" placeholder="Pega aquí tu URL de implementación (…/exec)" style="flex:1;max-width:420px;padding:10px 12px;border:1px solid var(--line-strong);font-size:12px;margin-right:10px">
+              <button class="copy-btn" onclick="saveWebAppUrl()">Guardar</button>
+            </div>
+          </div>
+          <div class="config-row">
+            <span>Estado de la conexión</span>
+            <span class="sync-dot" id="connSyncDot"><span class="d"></span><span id="connSyncTxt">Sin probar</span></span>
+          </div>
+          <button class="btn btn-ghost" onclick="testConnection()" style="margin-top:16px">Probar conexión</button>
+        </div>
+        <div class="admin-card">
+          <h4>Código de Google Apps Script</h4>
+          <p style="font-size:13px;color:var(--graphite);margin-bottom:14px;line-height:1.6">
+            Copia este código en <b>Extensiones → Apps Script</b> dentro de tu Google Sheet, despliega como
+            "Aplicación web" con acceso "Cualquier usuario", y pega la URL generada arriba.
+          </p>
+          <button class="btn btn-solid" onclick="downloadAppsScript()">Descargar código Apps Script (.gs)</button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<div class="toast-stack" id="toastStack"></div>
+
+<script>
+/* =====================================================================
+   PEAK store — single-file app
+   Persistencia de sesión por dispositivo: localStorage (sobrevive cierres
+   de navegador y reinicios, a diferencia de sessionStorage).
+   ===================================================================== */
+
+const PEAK_CONFIG = {
+  spreadsheetId: '1bjvkKJbobuombZBLiSApj4aVzPemnxBwfSChVZ3g7i4',
+  whatsappNumber: '573125456301', // formato internacional sin '+' para wa.me
+  adminEmail: 'peakm7358@gmail.com',
+  adminPassword: 'Peak2106',
+  syncIntervalMs: 25000, // refresco "tiempo real" del catálogo
+};
+
+const LS_KEYS = {
+  session:   'peak_session_v1',
+  webAppUrl: 'peak_webapp_url_v1',
+  cart:      'peak_cart_v1',
+  orders:    'peak_orders_v1',
+  cache:     'peak_data_cache_v1',
+  users:     'peak_users_v1', // fallback local si aún no hay backend de usuarios
+};
+
+/* ---------- estado en memoria ---------- */
+let STATE = {
+  products: [],
+  categories: [],
+  clients: [],
+  brandLogos: [],   // array de dataURLs/urls del logo horizontal
+  isoLogo: null,
+  cart: JSON.parse(localStorage.getItem(LS_KEYS.cart) || '[]'),
+  session: JSON.parse(localStorage.getItem(LS_KEYS.session) || 'null'),
+  activeCategoryFilter: 'todos',
+  searchTerm: '',
+  modalProduct: null,
+  modalQty: 1,
+  editingProductId: null,
+  pendingImages: { product: null, logos: [], iso: null, client: null },
+  lastSyncOk: false,
+};
+
+function fmtCOP(n){
+  n = Number(n)||0;
+  return '$' + n.toLocaleString('es-CO');
+}
+
+function uid(prefix){
+  return prefix + '_' + Date.now().toString(36) + Math.random().toString(36).slice(2,7);
+}
+
+function showToast(msg, isErr){
+  const stack = document.getElementById('toastStack');
+  const t = document.createElement('div');
+  t.className = 'toast';
+  if(isErr) t.style.borderLeftColor = '#c91c1c';
+  t.textContent = msg;
+  stack.appendChild(t);
+  setTimeout(()=>{ t.style.transition='opacity .4s'; t.style.opacity='0'; setTimeout(()=>t.remove(),400); }, 3200);
+}
+
+function escapeHtml(str){
+  if(str===undefined||str===null) return '';
+  return String(str).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+/* =====================================================================
+   SESIÓN POR DISPOSITIVO
+   Se guarda en localStorage -> persiste aunque cierren el navegador,
+   apaguen el celular o reinicien el computador. Cada dispositivo/navegador
+   mantiene su propia sesión de forma independiente.
+   ===================================================================== */
+function saveSession(session){
+  STATE.session = session;
+  localStorage.setItem(LS_KEYS.session, JSON.stringify(session));
+  renderAccountState();
+}
+function clearSession(){
+  STATE.session = null;
+  localStorage.removeItem(LS_KEYS.session);
+  renderAccountState();
+}
+function isAdminSession(){
+  return STATE.session && STATE.session.role === 'admin';
+}
+
+function renderAccountState(){
+  const adminEntry = document.getElementById('adminEntry');
+  const uName = document.getElementById('uName');
+  const uEmail = document.getElementById('uEmail');
+  const uBadge = document.getElementById('uBadge');
+  if(STATE.session){
+    uName.textContent = STATE.session.name || 'Usuario PEAK';
+    uEmail.textContent = STATE.session.email || '';
+    uBadge.style.display = isAdminSession() ? 'inline-block' : 'none';
+    adminEntry.style.display = isAdminSession() ? 'block' : 'none';
+  }
+}
+
+/* =====================================================================
+   CONEXIÓN CON GOOGLE APPS SCRIPT (lectura/escritura en tiempo real)
+   El Web App de Apps Script expone acciones via GET/POST con ?action=...
+   Si aún no se ha configurado la URL, la tienda funciona con datos de
+   demostración + lo que el admin suba (guardado localmente) para que
+   nunca se vea vacía mientras conectas el backend.
+   ===================================================================== */
+function getWebAppUrl(){
+  return localStorage.getItem(LS_KEYS.webAppUrl) || '';
+}
+function saveWebAppUrl(){
+  const val = document.getElementById('webAppUrlInput').value.trim();
+  if(!val){ showToast('Pega primero la URL de tu Web App', true); return; }
+  localStorage.setItem(LS_KEYS.webAppUrl, val);
+  showToast('URL guardada. Probando conexión…');
+  testConnection();
+}
+
+async function apiCall(action, payload){
+  const base = getWebAppUrl();
+  if(!base){
+    return { ok:false, offline:true, error:'no_url' };
+  }
+  try{
+    const res = await fetch(base, {
+      method:'POST',
+      headers:{'Content-Type':'text/plain;charset=utf-8'}, // evita preflight CORS en Apps Script
+      body: JSON.stringify({ action, payload, secret: 'peak-store' })
+    });
+    const data = await res.json();
+    return data;
+  }catch(err){
+    console.warn('apiCall error', action, err);
+    return { ok:false, offline:true, error:String(err) };
+  }
+}
+
+function setSyncIndicator(ok, customTxt){
+  STATE.lastSyncOk = ok;
+  [['syncDot','syncTxt'],['adminSyncDot','adminSyncTxt']].forEach(([dotId,txtId])=>{
+    const dot = document.getElementById(dotId);
+    const txt = document.getElementById(txtId);
+    if(!dot) return;
+    dot.classList.remove('ok','bad');
+    dot.classList.add(ok?'ok':'bad');
+    txt.textContent = customTxt || (ok ? 'En vivo' : 'Sin conexión — usando datos locales');
+  });
+  const connDot = document.getElementById('connSyncDot');
+  const connTxt = document.getElementById('connSyncTxt');
+  if(connDot){
+    connDot.classList.remove('ok','bad');
+    connDot.classList.add(ok?'ok':'bad');
+    connTxt.textContent = ok ? 'Conectado correctamente' : 'No se pudo conectar';
+  }
+}
+
+async function testConnection(){
+  const r = await apiCall('ping', {});
+  if(r && r.ok){ setSyncIndicator(true); showToast('Conexión exitosa con Google Sheets'); }
+  else{ setSyncIndicator(false); showToast('No se pudo conectar. Revisa la URL del Web App.', true); }
+}
+
+/* =====================================================================
+   DATOS: caché local (para que la tienda no se vea vacía sin backend)
+   + sincronización real desde Apps Script cuando está conectado.
+   ===================================================================== */
+const DEMO_CATEGORIES = [
+  { id:'cat_tech', name:'Tecnología', desc:'Lo último en gadgets y dispositivos' },
+  { id:'cat_hogar', name:'Hogar', desc:'Para tu espacio, con estilo' },
+  { id:'cat_accesorios', name:'Accesorios', desc:'Detalles que marcan la diferencia' },
+  { id:'cat_eventos', name:'Eventos PEAK', desc:'Merch y producción de marca' },
+];
+const DEMO_PRODUCTS = [
+  { id:'p1', name:'Audífonos PEAK Pro', categoryId:'cat_tech', price:189000, oldPrice:230000, stock:14, status:'activo', desc:'Cancelación de ruido activa, 30h de batería y estuche de carga rápida.', images:[] },
+  { id:'p2', name:'Power Bank 20.000mAh', categoryId:'cat_tech', price:95000, oldPrice:null, stock:30, status:'activo', desc:'Carga dos dispositivos a la vez. Compatible con carga rápida USB-C.', images:[] },
+  { id:'p3', name:'Lámpara LED Minimal', categoryId:'cat_hogar', price:64000, oldPrice:null, stock:0, status:'activo', desc:'Luz cálida regulable, base en aluminio cepillado.', images:[] },
+  { id:'p4', name:'Mug Edición PEAK', categoryId:'cat_eventos', price:32000, oldPrice:null, stock:50, status:'activo', desc:'Cerámica mate negra con isologo grabado en blanco.', images:[] },
+  { id:'p5', name:'Riñonera Urbana', categoryId:'cat_accesorios', price:58000, oldPrice:75000, stock:9, status:'activo', desc:'Resistente al agua, compartimento acolchado para celular.', images:[] },
+  { id:'p6', name:'Gorra PEAK Snapback', categoryId:'cat_eventos', price:45000, oldPrice:null, stock:22, status:'activo', desc:'Bordado en relieve, ajuste snapback universal.', images:[] },
+];
+
+function loadCache(){
+  try{
+    const c = JSON.parse(localStorage.getItem(LS_KEYS.cache) || 'null');
+    if(c){
+      STATE.products = c.products || [];
+      STATE.categories = c.categories || [];
+      STATE.clients = c.clients || [];
+      STATE.brandLogos = c.brandLogos || [];
+      STATE.isoLogo = c.isoLogo || null;
+      return true;
+    }
+  }catch(e){}
+  return false;
+}
+function saveCache(){
+  localStorage.setItem(LS_KEYS.cache, JSON.stringify({
+    products: STATE.products,
+    categories: STATE.categories,
+    clients: STATE.clients,
+    brandLogos: STATE.brandLogos,
+    isoLogo: STATE.isoLogo,
+  }));
+}
+function seedDemoIfEmpty(){
+  if(STATE.categories.length===0) STATE.categories = DEMO_CATEGORIES.slice();
+  if(STATE.products.length===0) STATE.products = DEMO_PRODUCTS.slice();
+}
+
+/**
+ * Sincroniza con el backend (Apps Script). Si hay conexión, los datos del
+ * sheet REEMPLAZAN el caché (fuente de verdad). Si no hay conexión,
+ * seguimos mostrando el caché/demo para que la tienda nunca se vea vacía.
+ */
+async function syncFromBackend(silent){
+  const url = getWebAppUrl();
+  if(!url){
+    setSyncIndicator(false, 'Backend no configurado — datos de muestra');
+    loadCache();
+    seedDemoIfEmpty();
+    renderAll();
+    return;
+  }
+  const r = await apiCall('getStoreData', {});
+  if(r && r.ok && r.data){
+    STATE.products   = r.data.products   || [];
+    STATE.categories = r.data.categories || [];
+    STATE.clients     = r.data.clients     || [];
+    STATE.brandLogos  = r.data.brandLogos  || [];
+    STATE.isoLogo      = r.data.isoLogo      || null;
+    saveCache();
+    setSyncIndicator(true);
+    renderAll();
+  }else{
+    setSyncIndicator(false);
+    if(!silent) showToast('No se pudo sincronizar, mostrando última versión guardada', true);
+    loadCache();
+    seedDemoIfEmpty();
+    renderAll();
+  }
+}
+
+function startLiveSync(){
+  syncFromBackend(false);
+  setInterval(()=>syncFromBackend(true), PEAK_CONFIG.syncIntervalMs);
+}
+
+/* =====================================================================
+   RENDER: PÚBLICO
+   ===================================================================== */
+function renderAll(){
+  renderStats();
+  renderCategoryGrid();
+  renderFilterBar();
+  renderProductGrid();
+  renderLogoStage();
+  renderClientsStrip();
+  renderCartBadge();
+  renderHeaderBrand();
+}
+
+/* ---------- logo del header (isologo o primer logo de marca, con fallback a texto) ---------- */
+function renderHeaderBrand(){
+  const img = document.getElementById('brandLogoImg');
+  const text = document.getElementById('brandText');
+  const src = STATE.isoLogo || (STATE.brandLogos && STATE.brandLogos[0]) || '';
+  if(src){
+    img.src = src;
+    img.style.display = 'block';
+    text.style.display = 'none';
+  }else{
+    img.style.display = 'none';
+    text.style.display = 'inline';
+  }
+}
+
+function renderStats(){
+  document.getElementById('statProducts').textContent = STATE.products.filter(p=>p.status==='activo').length;
+  document.getElementById('statCats').textContent = STATE.categories.length;
+}
+
+function catName(catId){
+  const c = STATE.categories.find(c=>c.id===catId);
+  return c ? c.name : 'General';
+}
+
+function renderCategoryGrid(){
+  const grid = document.getElementById('catGrid');
+  if(STATE.categories.length===0){
+    grid.innerHTML = `<div class="empty-state"><p class="display">Sin categorías aún</p><p>El administrador puede crearlas desde el panel.</p></div>`;
+    return;
+  }
+  grid.innerHTML = STATE.categories.map((c,i)=>{
+    const count = STATE.products.filter(p=>p.categoryId===c.id && p.status==='activo').length;
+    return `
+    <div class="cat-card" onclick="filterByCategory('${c.id}')">
+      <span class="cat-altitude">Pico ${String(i+1).padStart(2,'0')}</span>
+      <div>
+        <h3>${escapeHtml(c.name)}</h3>
+        <span class="cat-count">${count} producto${count===1?'':'s'}</span>
+      </div>
+      <span class="cat-arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 17 17 7M9 7h8v8"/></svg></span>
+    </div>`;
+  }).join('');
+}
+
+function renderFilterBar(){
+  const bar = document.getElementById('filterBar');
+  const search = bar.querySelector('.search-mini');
+  const chips = ['<button class="chip'+(STATE.activeCategoryFilter==='todos'?' active':'')+'" data-filter="todos" onclick="filterByCategory(\'todos\')">Todos</button>']
+    .concat(STATE.categories.map(c=>`<button class="chip${STATE.activeCategoryFilter===c.id?' active':''}" data-filter="${c.id}" onclick="filterByCategory('${c.id}')">${escapeHtml(c.name)}</button>`));
+  bar.innerHTML = chips.join('') ;
+  bar.appendChild(search);
+}
+
+function filterByCategory(catId){
+  STATE.activeCategoryFilter = catId;
+  renderFilterBar();
+  renderProductGrid();
+  scrollToSection('tienda');
+}
+
+function renderProductGrid(){
+  const grid = document.getElementById('prodGrid');
+  let list = STATE.products.filter(p=>p.status==='activo');
+  if(STATE.activeCategoryFilter !== 'todos') list = list.filter(p=>p.categoryId===STATE.activeCategoryFilter);
+  if(STATE.searchTerm){
+    const q = STATE.searchTerm.toLowerCase();
+    list = list.filter(p=>p.name.toLowerCase().includes(q) || (p.desc||'').toLowerCase().includes(q));
+  }
+  document.getElementById('prodCountLabel') && (document.getElementById('prodCountLabel').textContent = STATE.products.length);
+
+  if(list.length===0){
+    grid.innerHTML = `<div class="empty-state"><p class="display">No hay productos aquí</p><p>Prueba otra categoría o vuelve pronto — actualizamos en tiempo real.</p></div>`;
+    return;
+  }
+  grid.innerHTML = list.map(p=>{
+    const img = (p.images && p.images[0]) ? p.images[0] : '';
+    const outOfStock = Number(p.stock) <= 0;
+    return `
+    <div class="prod-card" onclick="openProductModal('${p.id}')">
+      <div class="prod-thumb">
+        ${img ? `<img src="${img}" alt="${escapeHtml(p.name)}">` : `<div class="skeleton" style="width:100%;height:100%"></div>`}
+        ${outOfStock ? `<span class="stock-flag out">Agotado</span>` : (p.oldPrice ? `<span class="stock-flag">Oferta</span>` : '')}
+        <div class="quick-add">${outOfStock?'Sin stock':'Ver producto'}</div>
+      </div>
+      <div class="prod-info">
+        <div class="p-cat">${escapeHtml(catName(p.categoryId))}</div>
+        <h4>${escapeHtml(p.name)}</h4>
+        <div class="p-price">${p.oldPrice?`<span class="old">${fmtCOP(p.oldPrice)}</span>`:''}${fmtCOP(p.price)}</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+document.getElementById('searchInput').addEventListener('input', e=>{
+  STATE.searchTerm = e.target.value;
+  renderProductGrid();
+});
+
+/* ---------- logo en desvanecido mezclado ---------- */
+let logoRotateTimer = null;
+function renderLogoStage(){
+  const stage = document.getElementById('logoStage');
+  const logos = STATE.brandLogos || [];
+  if(logos.length===0){
+    stage.classList.add('empty');
+    stage.innerHTML = '';
+    if(logoRotateTimer) clearInterval(logoRotateTimer);
+    return;
+  }
+  stage.classList.remove('empty');
+  stage.innerHTML = logos.map((src,i)=>`<img src="${src}" class="${i===0?'show':''}" data-i="${i}">`).join('') +
+    (logos.length>1 ? `<div class="lp">${logos.map((_,i)=>`<span class="${i===0?'on':''}"></span>`).join('')}</div>` : '');
+
+  if(logoRotateTimer) clearInterval(logoRotateTimer);
+  if(logos.length>1){
+    let idx = 0;
+    logoRotateTimer = setInterval(()=>{
+      const imgs = stage.querySelectorAll('img');
+      const dots = stage.querySelectorAll('.lp span');
+      imgs[idx].classList.remove('show');
+      dots[idx] && dots[idx].classList.remove('on');
+      idx = (idx+1) % imgs.length;
+      imgs[idx].classList.add('show');
+      dots[idx] && dots[idx].classList.add('on');
+    }, 3800); // tiempo en pantalla antes de cruzar al siguiente, transición CSS hace el fundido
+  }
+}
+
+let clientsAnimFrame = null;
+function renderClientsStrip(retryCount){
+  retryCount = retryCount || 0;
+  const wrap = document.getElementById('clientsWrap');
+  const clients = STATE.clients || [];
+  if(clientsAnimFrame){ cancelAnimationFrame(clientsAnimFrame); clientsAnimFrame = null; }
+
+  if(clients.length===0){
+    wrap.innerHTML = `<div class="clients-empty">Pronto verás aquí a las empresas que confían en PEAK.</div>`;
+    return;
+  }
+
+  const oneSet = clients.map(c=>`<img src="${c.logo}" alt="${escapeHtml(c.name)}" title="${escapeHtml(c.name)}">`).join('');
+  // Insertamos un único set primero para poder medir su ancho real una vez montado en el DOM.
+  wrap.innerHTML = `<div class="clients-track-wrap"><div class="clients-track" id="clientsTrack">${oneSet}</div></div>`;
+
+  requestAnimationFrame(()=>{
+    const track = document.getElementById('clientsTrack');
+    if(!track) return;
+    const setWidth = track.scrollWidth; // ancho de un set completo, incluyendo el gap final
+    const wrapWidth = wrap.clientWidth || window.innerWidth;
+
+    if((!setWidth || setWidth < 1) && retryCount < 20){
+      // las imágenes aún no han terminado de cargar y no sabemos su ancho real todavía;
+      // reintentamos un máximo de 20 veces (~1/3 seg) en vez de dividir por cero / Infinity
+      clientsAnimFrame = requestAnimationFrame(()=>renderClientsStrip(retryCount+1));
+      return;
+    }
+    if(!setWidth || setWidth < 1) return; // se agotaron los reintentos, evitamos romper el layout
+
+    // Repetimos el set las veces necesarias para que SIEMPRE haya al menos 3 sets
+    // de sobra cubriendo el contenedor visible, sin importar si hay 1, 2 o 20 logos.
+    const repeats = Math.max(3, Math.ceil((wrapWidth*2) / setWidth) + 1);
+    track.innerHTML = oneSet.repeat(repeats);
+
+    const reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if(reduceMotion){ track.style.transform = 'translateX(0)'; return; }
+
+    // velocidad constante en píxeles/segundo, no en duración fija,
+    // así el desplazamiento se ve igual de fluido sin importar cuántos logos haya
+    const pxPerSecond = 55;
+    let offset = 0;
+    let lastTs = null;
+    function step(ts){
+      if(lastTs===null) lastTs = ts;
+      const dt = (ts-lastTs)/1000;
+      lastTs = ts;
+      offset += pxPerSecond*dt;
+      if(offset >= setWidth) offset -= setWidth; // reinicia exactamente al cruzar un set completo: sin salto ni hueco
+      track.style.transform = `translateX(${-offset}px)`;
+      clientsAnimFrame = requestAnimationFrame(step);
+    }
+    clientsAnimFrame = requestAnimationFrame(step);
+  });
+}
+
+function renderCartBadge(){
+  const count = STATE.cart.reduce((s,i)=>s+i.qty,0);
+  const badge = document.getElementById('cartCount');
+  if(count>0){ badge.style.display='flex'; badge.textContent = count; }
+  else badge.style.display='none';
+}
+
+/* =====================================================================
+   NAVEGACIÓN
+   ===================================================================== */
+function scrollToSection(id){
+  const el = document.getElementById(id);
+  if(el) el.scrollIntoView({behavior:'smooth', block:'start'});
+  closeMobileMenu();
+}
+document.querySelectorAll('nav.primary a').forEach(a=>{
+  a.addEventListener('click', e=>{
+    document.querySelectorAll('nav.primary a').forEach(x=>x.classList.remove('active'));
+    a.classList.add('active');
+  });
+});
+
+const burgerBtn = document.getElementById('burgerBtn');
+const mobileMenu = document.getElementById('mobileMenu');
+const mmOverlay = document.getElementById('mmOverlay');
+function openMobileMenu(){ mobileMenu.classList.add('open'); mmOverlay.classList.add('open'); }
+function closeMobileMenu(){ mobileMenu.classList.remove('open'); mmOverlay.classList.remove('open'); }
+burgerBtn.addEventListener('click', openMobileMenu);
+document.getElementById('mmClose').addEventListener('click', closeMobileMenu);
+mmOverlay.addEventListener('click', closeMobileMenu);
+
+/* =====================================================================
+   DRAWERS GENÉRICOS (carrito / cuenta)
+   ===================================================================== */
+const overlayEl = document.getElementById('overlay');
+function closeAllDrawers(){
+  document.querySelectorAll('.drawer').forEach(d=>d.classList.remove('open'));
+  overlayEl.classList.remove('open');
+}
+function openDrawer(id){
+  closeAllDrawers();
+  document.getElementById(id).classList.add('open');
+  overlayEl.classList.add('open');
+}
+overlayEl.addEventListener('click', ()=>{ closeAllDrawers(); closeProductModal(); });
+
+document.getElementById('cartBtn').addEventListener('click', ()=>{
+  renderCartDrawer();
+  openDrawer('cartDrawer');
+});
+
+document.getElementById('accountBtn').addEventListener('click', ()=>{
+  if(STATE.session){ renderAccountState(); openDrawer('userDrawer'); }
+  else openDrawer('authDrawer');
+});
+
+function openAdminLogin(e){
+  if(e) e.preventDefault();
+  document.getElementById('authTitle').textContent = 'Acceso administrador';
+  switchAuthTab('login');
+  openDrawer('authDrawer');
+}
+
+/* =====================================================================
+   AUTENTICACIÓN
+   - El admin (peakm7358@gmail.com) tiene credenciales fijas de fábrica.
+   - Usuarios normales se registran y quedan guardados en este dispositivo
+     (y se pueden centralizar en el Sheet vía Apps Script: acción "registerUser"/"loginUser").
+   - La sesión se guarda en localStorage -> recordada por dispositivo.
+   ===================================================================== */
+function switchAuthTab(tab){
+  document.querySelectorAll('.auth-tab').forEach(t=>t.classList.toggle('active', t.dataset.tab===tab));
+  document.getElementById('loginPanel').style.display = tab==='login' ? 'block':'none';
+  document.getElementById('registerPanel').style.display = tab==='register' ? 'block':'none';
+}
+function authMsg(id, text, ok){
+  const el = document.getElementById(id);
+  el.textContent = text;
+  el.className = 'auth-msg show ' + (ok?'ok':'err');
+}
+
+function getLocalUsers(){
+  return JSON.parse(localStorage.getItem(LS_KEYS.users) || '[]');
+}
+function saveLocalUsers(list){
+  localStorage.setItem(LS_KEYS.users, JSON.stringify(list));
+}
+
+async function doLogin(){
+  const email = document.getElementById('loginEmail').value.trim().toLowerCase();
+  const pass = document.getElementById('loginPass').value;
+  if(!email || !pass){ authMsg('loginMsg','Completa correo y contraseña.', false); return; }
+
+  if(email === PEAK_CONFIG.adminEmail && pass === PEAK_CONFIG.adminPassword){
+    saveSession({ email, name:'Administrador PEAK', role:'admin', loginAt:Date.now() });
+    authMsg('loginMsg','¡Bienvenido, administrador!', true);
+    setTimeout(()=>{ closeAllDrawers(); openDrawer('userDrawer'); }, 500);
+    return;
+  }
+
+  // intenta backend, si no hay, usa usuarios locales
+  const r = await apiCall('loginUser', { email, password: pass });
+  if(r && r.ok && r.user){
+    saveSession({ email, name:r.user.name||email, role:'cliente', loginAt:Date.now() });
+    authMsg('loginMsg','¡Bienvenido de nuevo!', true);
+    setTimeout(()=>{ closeAllDrawers(); openDrawer('userDrawer'); }, 500);
+    return;
+  }
+  const local = getLocalUsers().find(u=>u.email===email && u.password===pass);
+  if(local){
+    saveSession({ email, name:local.name, role:'cliente', loginAt:Date.now() });
+    authMsg('loginMsg','¡Bienvenido de nuevo!', true);
+    setTimeout(()=>{ closeAllDrawers(); openDrawer('userDrawer'); }, 500);
+  }else{
+    authMsg('loginMsg','Correo o contraseña incorrectos.', false);
+  }
+}
+
+async function doRegister(){
+  const name = document.getElementById('regName').value.trim();
+  const email = document.getElementById('regEmail').value.trim().toLowerCase();
+  const phone = document.getElementById('regPhone').value.trim();
+  const pass = document.getElementById('regPass').value;
+  if(!name || !email || !pass){ authMsg('registerMsg','Completa nombre, correo y contraseña.', false); return; }
+  if(pass.length<6){ authMsg('registerMsg','La contraseña debe tener mínimo 6 caracteres.', false); return; }
+  if(email === PEAK_CONFIG.adminEmail){ authMsg('registerMsg','Ese correo está reservado.', false); return; }
+
+  const r = await apiCall('registerUser', { name, email, phone, password: pass });
+  const users = getLocalUsers();
+  if(users.find(u=>u.email===email)){ authMsg('registerMsg','Ya existe una cuenta con ese correo.', false); return; }
+  users.push({ name, email, phone, password: pass });
+  saveLocalUsers(users);
+
+  saveSession({ email, name, role:'cliente', loginAt:Date.now() });
+  authMsg('registerMsg','Cuenta creada. ¡Bienvenido a PEAK!', true);
+  setTimeout(()=>{ closeAllDrawers(); openDrawer('userDrawer'); }, 600);
+}
+
+function doLogout(){
+  clearSession();
+  closeAllDrawers();
+  showToast('Sesión cerrada en este dispositivo.');
+}
+
+/* =====================================================================
+   MODAL DE PRODUCTO
+   ===================================================================== */
+function openProductModal(id){
+  const p = STATE.products.find(p=>p.id===id);
+  if(!p) return;
+  STATE.modalProduct = p;
+  STATE.modalQty = 1;
+  document.getElementById('modalImg').src = (p.images && p.images[0]) || '';
+  document.getElementById('modalCat').textContent = catName(p.categoryId);
+  document.getElementById('modalName').textContent = p.name;
+  document.getElementById('modalPrice').innerHTML = (p.oldPrice?`<span class="old" style="font-size:15px;color:var(--grey-soft);text-decoration:line-through;margin-right:8px">${fmtCOP(p.oldPrice)}</span>`:'') + fmtCOP(p.price);
+  document.getElementById('modalDesc').textContent = p.desc || 'Sin descripción disponible.';
+  document.getElementById('modalQty').textContent = 1;
+  const outOfStock = Number(p.stock) <= 0;
+  const btn = document.getElementById('modalAddBtn');
+  btn.textContent = outOfStock ? 'Producto agotado' : 'Agregar al carrito';
+  btn.disabled = outOfStock;
+  btn.style.opacity = outOfStock ? .4 : 1;
+  btn.style.cursor = outOfStock ? 'not-allowed' : 'pointer';
+  document.getElementById('productModal').classList.add('open');
+}
+function closeProductModal(){
+  document.getElementById('productModal').classList.remove('open');
+}
+function modalQty(delta){
+  STATE.modalQty = Math.max(1, STATE.modalQty + delta);
+  document.getElementById('modalQty').textContent = STATE.modalQty;
+}
+function addToCartFromModal(){
+  if(!STATE.modalProduct) return;
+  addToCart(STATE.modalProduct.id, STATE.modalQty);
+  closeProductModal();
+  showToast('Agregado al carrito');
+}
+
+/* =====================================================================
+   CARRITO
+   ===================================================================== */
+function persistCart(){
+  localStorage.setItem(LS_KEYS.cart, JSON.stringify(STATE.cart));
+  renderCartBadge();
+}
+function addToCart(productId, qty){
+  const existing = STATE.cart.find(i=>i.productId===productId);
+  if(existing) existing.qty += qty;
+  else STATE.cart.push({ productId, qty });
+  persistCart();
+}
+function changeCartQty(productId, delta){
+  const item = STATE.cart.find(i=>i.productId===productId);
+  if(!item) return;
+  item.qty += delta;
+  if(item.qty<=0) STATE.cart = STATE.cart.filter(i=>i.productId!==productId);
+  persistCart();
+  renderCartDrawer();
+}
+function removeFromCart(productId){
+  STATE.cart = STATE.cart.filter(i=>i.productId!==productId);
+  persistCart();
+  renderCartDrawer();
+}
+function cartTotal(){
+  return STATE.cart.reduce((sum,item)=>{
+    const p = STATE.products.find(p=>p.id===item.productId);
+    return sum + (p ? p.price*item.qty : 0);
+  },0);
+}
+function renderCartDrawer(){
+  const wrap = document.getElementById('cartItems');
+  const footer = document.getElementById('cartFooter');
+  if(STATE.cart.length===0){
+    wrap.innerHTML = `<div class="cart-empty"><p class="display" style="font-size:18px;margin-bottom:6px">Tu carrito está vacío</p><p>Explora la tienda y agrega lo que te guste.</p></div>`;
+    footer.style.display='none';
+    return;
+  }
+  footer.style.display='block';
+  wrap.innerHTML = STATE.cart.map(item=>{
+    const p = STATE.products.find(p=>p.id===item.productId);
+    if(!p) return '';
+    const img = (p.images && p.images[0]) || '';
+    return `
+    <div class="cart-row">
+      <div class="ci-thumb">${img?`<img src="${img}">`:''}</div>
+      <div>
+        <div class="ci-name">${escapeHtml(p.name)}</div>
+        <div class="ci-price">${fmtCOP(p.price)} c/u</div>
+        <div class="qty-ctrl">
+          <button onclick="changeCartQty('${p.id}',-1)">−</button>
+          <span>${item.qty}</span>
+          <button onclick="changeCartQty('${p.id}',1)">+</button>
+        </div>
+        <a class="ci-remove" onclick="removeFromCart('${p.id}')">Quitar</a>
+      </div>
+      <div class="ci-line-total">${fmtCOP(p.price*item.qty)}</div>
+    </div>`;
+  }).join('');
+  document.getElementById('cartTotal').textContent = fmtCOP(cartTotal());
+}
+
+/* =====================================================================
+   CHECKOUT → WHATSAPP
+   Redirige con un mensaje pre-armado: detalle del pedido y total.
+   ===================================================================== */
+function buildWhatsappMessage(){
+  const name = document.getElementById('custName').value.trim();
+  const address = document.getElementById('custAddress').value.trim();
+  let lines = [];
+  lines.push('¡Hola PEAK! Quiero hacer este pedido:');
+  lines.push('');
+  STATE.cart.forEach(item=>{
+    const p = STATE.products.find(p=>p.id===item.productId);
+    if(!p) return;
+    lines.push(`• ${p.name} x${item.qty} — ${fmtCOP(p.price*item.qty)}`);
+  });
+  lines.push('');
+  lines.push(`TOTAL: ${fmtCOP(cartTotal())}`);
+  if(name) lines.push(`Nombre: ${name}`);
+  if(address) lines.push(`Dirección: ${address}`);
+  return encodeURIComponent(lines.join('\n'));
+}
+function checkoutWhatsapp(){
+  if(STATE.cart.length===0){ showToast('Tu carrito está vacío', true); return; }
+  const name = document.getElementById('custName').value.trim();
+  if(!name){ showToast('Escribe tu nombre para continuar', true); document.getElementById('custName').focus(); return; }
+
+  const total = cartTotal();
+  const summary = STATE.cart.map(item=>{
+    const p = STATE.products.find(p=>p.id===item.productId);
+    return p ? `${p.name} x${item.qty}` : '';
+  }).filter(Boolean).join(', ');
+
+  // registro local de referencia (visible en el panel admin -> Pedidos)
+  const orders = JSON.parse(localStorage.getItem(LS_KEYS.orders) || '[]');
+  orders.unshift({ date:new Date().toLocaleString('es-CO'), customer:name, summary, total });
+  localStorage.setItem(LS_KEYS.orders, JSON.stringify(orders.slice(0,200)));
+  apiCall('logOrder', { name, address: document.getElementById('custAddress').value.trim(), summary, total }); // best-effort
+
+  const msg = buildWhatsappMessage();
+  window.open(`https://wa.me/${PEAK_CONFIG.whatsappNumber}?text=${msg}`, '_blank');
+
+  STATE.cart = [];
+  persistCart();
+  renderCartDrawer();
+  showToast('Te llevamos a WhatsApp para confirmar tu pedido');
+}
+
+/* WhatsApp flotante y CTA general -> mensaje de saludo simple */
+function genericWhatsappLink(){
+  const msg = encodeURIComponent('¡Hola PEAK! Quiero más información sobre sus productos.');
+  return `https://wa.me/${PEAK_CONFIG.whatsappNumber}?text=${msg}`;
+}
+document.getElementById('waFloat').addEventListener('click', e=>{ e.preventDefault(); window.open(genericWhatsappLink(),'_blank'); });
+document.getElementById('ctaWhatsapp').addEventListener('click', e=>{ e.preventDefault(); window.open(genericWhatsappLink(),'_blank'); });
+document.getElementById('footWhatsapp').addEventListener('click', e=>{ e.preventDefault(); window.open(genericWhatsappLink(),'_blank'); });
+
+/* =====================================================================
+   IMÁGENES: lectura + compresión a base64 (para guardar en Sheets/celda
+   o enviarlas al backend sin depender de un servidor de archivos)
+   ===================================================================== */
+function readImageAsCompressedDataUrl(file, maxWidth){
+  return new Promise((resolve, reject)=>{
+    const reader = new FileReader();
+    reader.onload = ()=>{
+      const img = new Image();
+      img.onload = ()=>{
+        const scale = Math.min(1, (maxWidth||1400)/img.width);
+        const w = Math.round(img.width*scale);
+        const h = Math.round(img.height*scale);
+        const canvas = document.createElement('canvas');
+        canvas.width = w; canvas.height = h;
+        canvas.getContext('2d').drawImage(img,0,0,w,h);
+        resolve(canvas.toDataURL('image/jpeg', 0.82));
+      };
+      img.onerror = reject;
+      img.src = reader.result;
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
+/* =====================================================================
+   PANEL ADMIN — apertura / navegación interna
+   ===================================================================== */
+function openAdmin(){
+  if(!isAdminSession()){ showToast('Solo el administrador puede entrar aquí.', true); return; }
+  closeAllDrawers();
+  document.getElementById('adminShell').classList.add('open');
+  refreshAdminViews();
+}
+function closeAdmin(){
+  document.getElementById('adminShell').classList.remove('open');
+}
+document.querySelectorAll('#adminNav button').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    document.querySelectorAll('#adminNav button').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    document.querySelectorAll('.admin-section').forEach(s=>s.classList.remove('active'));
+    document.getElementById('sec-'+btn.dataset.sec).classList.add('active');
+  });
+});
+
+function refreshAdminViews(){
+  populateCategorySelect();
+  renderAdminProductTable();
+  renderAdminCategoryTable();
+  renderAdminClientsTable();
+  renderAdminOrdersTable();
+  renderAdminLogoPreviews();
+  renderDashboard();
+  document.getElementById('webAppUrlInput').value = getWebAppUrl();
+  setSyncIndicator(STATE.lastSyncOk);
+}
+
+function renderDashboard(){
+  document.getElementById('dashProd').textContent = STATE.products.length;
+  document.getElementById('dashCat').textContent = STATE.categories.length;
+  document.getElementById('dashOut').textContent = STATE.products.filter(p=>Number(p.stock)<=0).length;
+  document.getElementById('dashClients').textContent = STATE.clients.length;
+}
+
+/* =====================================================================
+   ADMIN — PRODUCTOS
+   ===================================================================== */
+function populateCategorySelect(){
+  const sel = document.getElementById('pf_cat');
+  sel.innerHTML = STATE.categories.map(c=>`<option value="${c.id}">${escapeHtml(c.name)}</option>`).join('') || '<option value="">Crea una categoría primero</option>';
+}
+
+document.getElementById('pf_image').addEventListener('change', async (e)=>{
+  const file = e.target.files[0];
+  if(!file) return;
+  const dataUrl = await readImageAsCompressedDataUrl(file, 1200);
+  STATE.pendingImages.product = dataUrl;
+  document.getElementById('pf_preview').innerHTML = `<div class="ip"><img src="${dataUrl}"><button onclick="STATE.pendingImages.product=null;this.closest('.ip').remove()">×</button></div>`;
+});
+
+function resetProductForm(){
+  STATE.editingProductId = null;
+  STATE.pendingImages.product = null;
+  document.getElementById('pf_name').value = '';
+  document.getElementById('pf_price').value = '';
+  document.getElementById('pf_oldprice').value = '';
+  document.getElementById('pf_stock').value = '';
+  document.getElementById('pf_desc').value = '';
+  document.getElementById('pf_status').value = 'activo';
+  document.getElementById('pf_preview').innerHTML = '';
+  document.getElementById('pf_image').value = '';
+  document.getElementById('prodFormTitle').textContent = 'Nuevo producto';
+  document.getElementById('pf_saveBtn').textContent = 'Publicar producto';
+  document.getElementById('pf_cancelBtn').style.display = 'none';
+}
+
+function editProduct(id){
+  const p = STATE.products.find(p=>p.id===id);
+  if(!p) return;
+  STATE.editingProductId = id;
+  document.getElementById('pf_name').value = p.name;
+  document.getElementById('pf_cat').value = p.categoryId;
+  document.getElementById('pf_price').value = p.price;
+  document.getElementById('pf_oldprice').value = p.oldPrice || '';
+  document.getElementById('pf_stock').value = p.stock;
+  document.getElementById('pf_status').value = p.status;
+  document.getElementById('pf_desc').value = p.desc || '';
+  document.getElementById('pf_preview').innerHTML = (p.images&&p.images[0]) ? `<div class="ip"><img src="${p.images[0]}"></div>` : '';
+  document.getElementById('prodFormTitle').textContent = 'Editando: ' + p.name;
+  document.getElementById('pf_saveBtn').textContent = 'Guardar cambios';
+  document.getElementById('pf_cancelBtn').style.display = 'inline-flex';
+  document.getElementById('prodFormCard').scrollIntoView({behavior:'smooth', block:'start'});
+}
+
+async function saveProduct(){
+  const name = document.getElementById('pf_name').value.trim();
+  const categoryId = document.getElementById('pf_cat').value;
+  const price = Number(document.getElementById('pf_price').value);
+  const oldPrice = document.getElementById('pf_oldprice').value ? Number(document.getElementById('pf_oldprice').value) : null;
+  const stock = Number(document.getElementById('pf_stock').value)||0;
+  const status = document.getElementById('pf_status').value;
+  const desc = document.getElementById('pf_desc').value.trim();
+
+  if(!name || !categoryId || !price){ showToast('Nombre, categoría y precio son obligatorios.', true); return; }
+
+  let images = [];
+  if(STATE.pendingImages.product) images = [STATE.pendingImages.product];
+  else if(STATE.editingProductId){
+    const existing = STATE.products.find(p=>p.id===STATE.editingProductId);
+    images = (existing && existing.images) || [];
+  }
+
+  const productPayload = { name, categoryId, price, oldPrice, stock, status, desc, images };
+
+  if(STATE.editingProductId){
+    const idx = STATE.products.findIndex(p=>p.id===STATE.editingProductId);
+    STATE.products[idx] = { ...STATE.products[idx], ...productPayload };
+    await apiCall('updateProduct', { id: STATE.editingProductId, ...productPayload });
+    showToast('Producto actualizado');
+  }else{
+    const newProduct = { id: uid('prod'), ...productPayload };
+    STATE.products.push(newProduct);
+    await apiCall('createProduct', newProduct);
+    showToast('Producto publicado en la tienda');
+  }
+
+  saveCache();
+  resetProductForm();
+  renderAdminProductTable();
+  renderDashboard();
+  renderProductGrid();
+  renderCategoryGrid();
+  renderStats();
+}
+
+async function deleteProduct(id){
+  if(!confirm('¿Eliminar este producto? Esta acción no se puede deshacer.')) return;
+  STATE.products = STATE.products.filter(p=>p.id!==id);
+  saveCache();
+  await apiCall('deleteProduct', { id });
+  renderAdminProductTable();
+  renderDashboard();
+  renderProductGrid();
+  renderCategoryGrid();
+  showToast('Producto eliminado');
+}
+
+function stockPill(p){
+  const s = Number(p.stock);
+  if(s<=0) return '<span class="pill-stat out">Agotado</span>';
+  if(s<=5) return '<span class="pill-stat low">Bajo</span>';
+  return '<span class="pill-stat live">Disponible</span>';
+}
+
+function renderAdminProductTable(){
+  const tbody = document.getElementById('adminProdTable');
+  const search = (document.getElementById('prodAdminSearch').value||'').toLowerCase();
+  let list = STATE.products;
+  if(search) list = list.filter(p=>p.name.toLowerCase().includes(search));
+  document.getElementById('prodCountLabel').textContent = STATE.products.length;
+
+  if(list.length===0){
+    tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;color:var(--grey-mid);padding:30px">Aún no has subido productos.</td></tr>`;
+    return;
+  }
+  tbody.innerHTML = list.map(p=>`
+    <tr>
+      <td>${(p.images&&p.images[0]) ? `<img src="${p.images[0]}">` : `<div class="skeleton" style="width:42px;height:42px"></div>`}</td>
+      <td>${escapeHtml(p.name)}</td>
+      <td>${escapeHtml(catName(p.categoryId))}</td>
+      <td>${fmtCOP(p.price)}</td>
+      <td>${p.stock} ${stockPill(p)}</td>
+      <td>${p.status==='activo' ? 'Visible' : 'Oculto'}</td>
+      <td class="row-actions">
+        <button onclick="editProduct('${p.id}')">Editar</button>
+        <button class="danger" onclick="deleteProduct('${p.id}')">Eliminar</button>
+      </td>
+    </tr>`).join('');
+}
+document.getElementById('prodAdminSearch').addEventListener('input', renderAdminProductTable);
+
+/* =====================================================================
+   ADMIN — CATEGORÍAS
+   ===================================================================== */
+async function saveCategory(){
+  const name = document.getElementById('cf_name').value.trim();
+  const desc = document.getElementById('cf_desc').value.trim();
+  if(!name){ showToast('Escribe un nombre para la categoría', true); return; }
+  const cat = { id: uid('cat'), name, desc };
+  STATE.categories.push(cat);
+  saveCache();
+  await apiCall('createCategory', cat);
+  document.getElementById('cf_name').value=''; document.getElementById('cf_desc').value='';
+  populateCategorySelect();
+  renderAdminCategoryTable();
+  renderCategoryGrid();
+  renderFilterBar();
+  renderDashboard();
+  showToast('Categoría creada');
+}
+async function deleteCategory(id){
+  const inUse = STATE.products.some(p=>p.categoryId===id);
+  if(inUse && !confirm('Hay productos en esta categoría. ¿Eliminarla igual? Los productos quedarán sin categoría asignada.')) return;
+  STATE.categories = STATE.categories.filter(c=>c.id!==id);
+  saveCache();
+  await apiCall('deleteCategory', { id });
+  populateCategorySelect();
+  renderAdminCategoryTable();
+  renderCategoryGrid();
+  renderFilterBar();
+  renderDashboard();
+  showToast('Categoría eliminada');
+}
+function renderAdminCategoryTable(){
+  const tbody = document.getElementById('adminCatTable');
+  if(STATE.categories.length===0){
+    tbody.innerHTML = `<tr><td colspan="4" style="text-align:center;color:var(--grey-mid);padding:30px">Crea tu primera categoría arriba.</td></tr>`;
+    return;
+  }
+  tbody.innerHTML = STATE.categories.map(c=>{
+    const count = STATE.products.filter(p=>p.categoryId===c.id).length;
+    return `<tr>
+      <td>${escapeHtml(c.name)}</td>
+      <td>${escapeHtml(c.desc||'—')}</td>
+      <td>${count}</td>
+      <td class="row-actions"><button class="danger" onclick="deleteCategory('${c.id}')">Eliminar</button></td>
+    </tr>`;
+  }).join('');
+}
+
+/* =====================================================================
+   ADMIN — MARCA / LOGOS (rotación en desvanecido)
+   Logo horizontal: 4488×724 — se redimensiona a un ancho manejable
+   conservando proporción. Isologo: 1402×1122.
+   ===================================================================== */
+document.getElementById('logo_image').addEventListener('change', async (e)=>{
+  const files = Array.from(e.target.files);
+  for(const file of files){
+    const dataUrl = await readImageAsCompressedDataUrl(file, 1600);
+    STATE.brandLogos.push(dataUrl);
+  }
+  saveCache();
+  await apiCall('saveBrandLogos', { brandLogos: STATE.brandLogos });
+  renderAdminLogoPreviews();
+  renderLogoStage();
+  renderHeaderBrand();
+  showToast('Logo(s) agregados — ya rotan en "Nosotros"');
+  e.target.value = '';
+});
+document.getElementById('iso_image').addEventListener('change', async (e)=>{
+  const file = e.target.files[0];
+  if(!file) return;
+  const dataUrl = await readImageAsCompressedDataUrl(file, 1000);
+  STATE.isoLogo = dataUrl;
+  saveCache();
+  await apiCall('saveIsoLogo', { isoLogo: dataUrl });
+  renderAdminLogoPreviews();
+  renderHeaderBrand();
+  showToast('Isologo actualizado');
+  e.target.value = '';
+});
+
+async function removeBrandLogo(idx){
+  STATE.brandLogos.splice(idx,1);
+  saveCache();
+  await apiCall('saveBrandLogos', { brandLogos: STATE.brandLogos });
+  renderAdminLogoPreviews();
+  renderLogoStage();
+  renderHeaderBrand();
+}
+async function removeIsoLogo(){
+  STATE.isoLogo = null;
+  saveCache();
+  await apiCall('saveIsoLogo', { isoLogo: null });
+  renderAdminLogoPreviews();
+  renderHeaderBrand();
+}
+
+function renderAdminLogoPreviews(){
+  const logoWrap = document.getElementById('logo_preview');
+  logoWrap.innerHTML = (STATE.brandLogos||[]).map((src,i)=>`<div class="ip"><img src="${src}"><button onclick="removeBrandLogo(${i})">×</button></div>`).join('');
+  const isoWrap = document.getElementById('iso_preview');
+  isoWrap.innerHTML = STATE.isoLogo ? `<div class="ip"><img src="${STATE.isoLogo}"><button onclick="removeIsoLogo()">×</button></div>` : '';
+}
+
+/* =====================================================================
+   ADMIN — CLIENTES (logos de empresas que han trabajado con PEAK)
+   ===================================================================== */
+document.getElementById('client_image').addEventListener('change', async (e)=>{
+  const file = e.target.files[0];
+  if(!file) return;
+  const dataUrl = await readImageAsCompressedDataUrl(file, 800);
+  STATE.pendingImages.client = dataUrl;
+  document.getElementById('client_preview').innerHTML = `<div class="ip"><img src="${dataUrl}"></div>`;
+});
+async function saveClientLogo(){
+  const name = document.getElementById('clf_name').value.trim();
+  if(!name || !STATE.pendingImages.client){ showToast('Agrega nombre y logo del cliente', true); return; }
+  const client = { id: uid('client'), name, logo: STATE.pendingImages.client };
+  STATE.clients.push(client);
+  saveCache();
+  await apiCall('createClient', client);
+  document.getElementById('clf_name').value='';
+  document.getElementById('client_preview').innerHTML='';
+  document.getElementById('client_image').value='';
+  STATE.pendingImages.client = null;
+  renderAdminClientsTable();
+  renderClientsStrip();
+  renderDashboard();
+  showToast('Cliente agregado a la franja de confianza');
+}
+async function deleteClientLogo(id){
+  STATE.clients = STATE.clients.filter(c=>c.id!==id);
+  saveCache();
+  await apiCall('deleteClient', { id });
+  renderAdminClientsTable();
+  renderClientsStrip();
+  renderDashboard();
+}
+function renderAdminClientsTable(){
+  const tbody = document.getElementById('adminClientsTable');
+  if(STATE.clients.length===0){
+    tbody.innerHTML = `<tr><td colspan="3" style="text-align:center;color:var(--grey-mid);padding:30px">Aún no has agregado clientes.</td></tr>`;
+    return;
+  }
+  tbody.innerHTML = STATE.clients.map(c=>`
+    <tr>
+      <td><img src="${c.logo}"></td>
+      <td>${escapeHtml(c.name)}</td>
+      <td class="row-actions"><button class="danger" onclick="deleteClientLogo('${c.id}')">Eliminar</button></td>
+    </tr>`).join('');
+}
+
+/* =====================================================================
+   ADMIN — PEDIDOS (registro local de referencia)
+   ===================================================================== */
+function renderAdminOrdersTable(){
+  const tbody = document.getElementById('adminOrdersTable');
+  const orders = JSON.parse(localStorage.getItem(LS_KEYS.orders) || '[]');
+  if(orders.length===0){
+    tbody.innerHTML = `<tr><td colspan="4" style="text-align:center;color:var(--grey-mid);padding:30px">Aún no hay pedidos registrados en este dispositivo.</td></tr>`;
+    return;
+  }
+  tbody.innerHTML = orders.map(o=>`
+    <tr>
+      <td>${escapeHtml(o.date)}</td>
+      <td>${escapeHtml(o.customer)}</td>
+      <td>${escapeHtml(o.summary)}</td>
+      <td>${fmtCOP(o.total)}</td>
+    </tr>`).join('');
+}
+
+/* =====================================================================
+   APPS SCRIPT — código generado para descargar
+   Crea las hojas necesarias automáticamente la primera vez que se llama.
+   Spreadsheet ID ya viene incrustado: ' + PEAK_CONFIG.spreadsheetId + '
+   ===================================================================== */
+function downloadAppsScript(){
+  const code = `/**
+ * PEAK store — Backend de Google Apps Script
+ * Spreadsheet conectado: ${PEAK_CONFIG.spreadsheetId}
+ *
+ * INSTALACIÓN:
+ * 1. Abre tu Google Sheet (ID: ${PEAK_CONFIG.spreadsheetId}).
+ * 2. Ve a Extensiones > Apps Script.
+ * 3. Borra el contenido del editor y pega TODO este archivo.
+ * 4. Guarda. Luego Implementar > Nueva implementación > tipo "Aplicación web".
+ *    - Ejecutar como: Yo (tu cuenta)
+ *    - Quién tiene acceso: Cualquier usuario
+ * 5. Copia la URL que termina en /exec y pégala en el panel admin
+ *    de PEAK store, en "Conexión > URL del Web App".
+ */
+
+const SPREADSHEET_ID = '${PEAK_CONFIG.spreadsheetId}';
+
+const SHEETS = {
+  products: 'Productos',
+  categories: 'Categorias',
+  clients: 'Clientes',
+  brand: 'Marca',
+  orders: 'Pedidos',
+  users: 'Usuarios',
+};
+
+function getSS(){ return SpreadsheetApp.openById(SPREADSHEET_ID); }
+
+function ensureSheets(){
+  const ss = getSS();
+  const headers = {
+    [SHEETS.products]: ['id','name','categoryId','price','oldPrice','stock','status','desc','images'],
+    [SHEETS.categories]: ['id','name','desc'],
+    [SHEETS.clients]: ['id','name','logo'],
+    [SHEETS.brand]: ['key','value'],
+    [SHEETS.orders]: ['date','name','address','summary','total'],
+    [SHEETS.users]: ['name','email','phone','password'],
+  };
+  Object.keys(headers).forEach(name=>{
+    let sh = ss.getSheetByName(name);
+    if(!sh){
+      sh = ss.insertSheet(name);
+      sh.appendRow(headers[name]);
+    }
+  });
+}
+
+function doPost(e){
+  ensureSheets();
+  let body;
+  try{ body = JSON.parse(e.postData.contents); }catch(err){ return jsonOut({ok:false,error:'bad_request'}); }
+  const action = body.action;
+  const payload = body.payload || {};
+
+  try{
+    switch(action){
+      case 'ping': return jsonOut({ok:true, time:new Date().toISOString()});
+      case 'getStoreData': return jsonOut({ok:true, data:getStoreData()});
+      case 'createProduct': return jsonOut({ok:true, ...createProduct(payload)});
+      case 'updateProduct': return jsonOut({ok:true, ...updateProduct(payload)});
+      case 'deleteProduct': return jsonOut({ok:true, ...deleteRowById(SHEETS.products, payload.id)});
+      case 'createCategory': return jsonOut({ok:true, ...appendRow(SHEETS.categories, [payload.id,payload.name,payload.desc||''])});
+      case 'deleteCategory': return jsonOut({ok:true, ...deleteRowById(SHEETS.categories, payload.id)});
+      case 'createClient': return jsonOut({ok:true, ...appendRow(SHEETS.clients, [payload.id,payload.name,payload.logo])});
+      case 'deleteClient': return jsonOut({ok:true, ...deleteRowById(SHEETS.clients, payload.id)});
+      case 'saveBrandLogos': return jsonOut({ok:true, ...saveBrandKey('brandLogos', JSON.stringify(payload.brandLogos||[]))});
+      case 'saveIsoLogo': return jsonOut({ok:true, ...saveBrandKey('isoLogo', payload.isoLogo||'')});
+      case 'logOrder': return jsonOut({ok:true, ...appendRow(SHEETS.orders, [new Date().toLocaleString(), payload.name, payload.address||'', payload.summary, payload.total])});
+      case 'registerUser': return jsonOut({ok:true, ...appendRow(SHEETS.users, [payload.name,payload.email,payload.phone||'',payload.password])});
+      case 'loginUser': return jsonOut(loginUser(payload));
+      default: return jsonOut({ok:false, error:'unknown_action'});
+    }
+  }catch(err){
+    return jsonOut({ok:false, error:String(err)});
+  }
+}
+
+function doGet(e){
+  ensureSheets();
+  return jsonOut({ok:true, data:getStoreData()});
+}
+
+function jsonOut(obj){
+  return ContentService.createTextOutput(JSON.stringify(obj)).setMimeType(ContentService.MimeType.JSON);
+}
+
+function sheetToObjects(sheetName){
+  const sh = getSS().getSheetByName(sheetName);
+  const rows = sh.getDataRange().getValues();
+  if(rows.length<2) return [];
+  const headers = rows[0];
+  return rows.slice(1).filter(r=>r.some(c=>c!=='')).map(r=>{
+    const obj = {};
+    headers.forEach((h,i)=> obj[h] = r[i]);
+    return obj;
+  });
+}
+
+function getStoreData(){
+  const products = sheetToObjects(SHEETS.products).map(p=>({
+    ...p,
+    price:Number(p.price)||0,
+    oldPrice: p.oldPrice ? Number(p.oldPrice) : null,
+    stock:Number(p.stock)||0,
+    images: safeParseArray(p.images),
+  }));
+  const categories = sheetToObjects(SHEETS.categories);
+  const clients = sheetToObjects(SHEETS.clients);
+  const brandRows = sheetToObjects(SHEETS.brand);
+  const brandLogosRow = brandRows.find(r=>r.key==='brandLogos');
+  const isoLogoRow = brandRows.find(r=>r.key==='isoLogo');
+  return {
+    products, categories, clients,
+    brandLogos: brandLogosRow ? safeParseArray(brandLogosRow.value) : [],
+    isoLogo: isoLogoRow ? (isoLogoRow.value || null) : null,
+  };
+}
+function safeParseArray(v){ try{ const a = JSON.parse(v); return Array.isArray(a)?a:(v?[v]:[]); }catch(e){ return v ? [v] : []; } }
+
+function appendRow(sheetName, rowArray){
+  getSS().getSheetByName(sheetName).appendRow(rowArray);
+  return {};
+}
+
+function createProduct(p){
+  appendRow(SHEETS.products, [p.id,p.name,p.categoryId,p.price,p.oldPrice||'',p.stock,p.status,p.desc||'',JSON.stringify(p.images||[])]);
+  return {};
+}
+function updateProduct(p){
+  const sh = getSS().getSheetByName(SHEETS.products);
+  const rows = sh.getDataRange().getValues();
+  for(let i=1;i<rows.length;i++){
+    if(rows[i][0]===p.id){
+      sh.getRange(i+1,1,1,9).setValues([[p.id,p.name,p.categoryId,p.price,p.oldPrice||'',p.stock,p.status,p.desc||'',JSON.stringify(p.images||[])]]);
+      break;
+    }
+  }
+  return {};
+}
+function deleteRowById(sheetName, id){
+  const sh = getSS().getSheetByName(sheetName);
+  const rows = sh.getDataRange().getValues();
+  for(let i=1;i<rows.length;i++){
+    if(rows[i][0]===id){ sh.deleteRow(i+1); break; }
+  }
+  return {};
+}
+function saveBrandKey(key, value){
+  const sh = getSS().getSheetByName(SHEETS.brand);
+  const rows = sh.getDataRange().getValues();
+  for(let i=1;i<rows.length;i++){
+    if(rows[i][0]===key){ sh.getRange(i+1,2).setValue(value); return {}; }
+  }
+  sh.appendRow([key, value]);
+  return {};
+}
+function loginUser(payload){
+  const users = sheetToObjects(SHEETS.users);
+  const u = users.find(u=>u.email===payload.email && u.password===payload.password);
+  return u ? {ok:true, user:u} : {ok:false};
+}
+`;
+  const blob = new Blob([code], {type:'text/plain'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = 'PEAK_AppsScript.gs';
+  document.body.appendChild(a); a.click(); a.remove();
+  URL.revokeObjectURL(url);
+  showToast('Código descargado. Pégalo en Apps Script de tu Google Sheet.');
+}
+
+/* =====================================================================
+   INICIALIZACIÓN
+   ===================================================================== */
+document.getElementById('yearNow').textContent = new Date().getFullYear();
+renderAccountState();
+renderCartBadge();
+loadCache();
+seedDemoIfEmpty();
+renderAll();
+startLiveSync();
+</script>
+
+</body>
+</html>
