@@ -5,6 +5,19 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>PEAK store</title>
 <meta name="description" content="PEAK store — tecnología y más a precios increíbles.">
+<script>
+  /* Aplica el tema guardado ANTES de pintar la página, para evitar parpadeos */
+  (function(){
+    try{
+      var saved = localStorage.getItem('peakTheme');
+      var theme = saved || ((window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) ? 'dark' : 'light');
+      document.documentElement.setAttribute('data-theme', theme);
+    }catch(e){}
+  })();
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700;800;900&family=Raleway:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
   /* ============ TOKENS ============ */
   :root{
@@ -20,6 +33,27 @@
     --radius:2px;
     --max:1280px;
     --ease:cubic-bezier(.16,1,.3,1);
+
+    /* Tipografías */
+    --font-body:'Raleway', Arial, Helvetica, sans-serif;
+    --font-display:'Montserrat', 'Arial Black', 'Helvetica Neue', Arial, sans-serif;
+
+    /* Colores fijos: usados en bloques que SIEMPRE deben verse oscuros (footer, sección
+       "Nosotros", visual del hero, telones de fondo de drawers/modales), sin importar
+       si el sitio está en modo claro u oscuro */
+    --ink-fixed:#0A0A0A;
+    --paper-fixed:#FAFAF8;
+  }
+
+  /* ============ MODO OSCURO ============ */
+  :root[data-theme="dark"]{
+    --ink:#F3F3EF;
+    --paper:#0B0B0B;
+    --graphite:#d8d8d3;
+    --line:#ffffff1a;
+    --line-strong:#ffffff33;
+    --grey-mid:#9a9a94;
+    --grey-soft:#6f6f6a;
   }
 
   *{margin:0;padding:0;box-sizing:border-box;}
@@ -27,14 +61,15 @@
   body{
     background:var(--paper);
     color:var(--ink);
-    font-family:'PEAK-Body', Arial, Helvetica, sans-serif;
+    font-family:var(--font-body);
     -webkit-font-smoothing:antialiased;
     overflow-x:hidden;
+    transition:background-color .35s ease, color .35s ease;
   }
 
-  /* Display face built from system stack, used only for headings, heavy tracking */
+  /* Display face: usada solo para títulos, tracking marcado */
   .display{
-    font-family:'Arial Black','Helvetica Neue',Arial,sans-serif;
+    font-family:var(--font-display);
     font-weight:900;
     letter-spacing:-0.02em;
     text-transform:uppercase;
@@ -76,6 +111,7 @@
     position:sticky;top:0;z-index:500;
     background:var(--paper);
     border-bottom:1px solid var(--line-strong);
+    transition:background-color .35s ease, border-color .35s ease;
   }
   .topbar{
     display:flex;align-items:center;justify-content:space-between;
@@ -120,6 +156,34 @@
   }
   .burger{display:none;}
 
+  /* El menú móvil SIEMPRE debe estar fuera del flujo normal (fixed) y oculto,
+     sin importar el ancho de pantalla, para que nunca pueda aparecer como
+     texto plano debajo de la barra superior. */
+  .mobile-menu{
+    position:fixed;inset:0 0 0 auto;width:84vw;max-width:340px;height:100vh;
+    background:var(--paper);z-index:900;
+    transform:translateX(100%);
+    transition:transform .35s var(--ease), background-color .35s ease;
+    border-left:1px solid var(--line-strong);
+    display:flex;flex-direction:column;
+    overflow-y:auto;
+    visibility:hidden;
+    pointer-events:none;
+  }
+  .mobile-menu.open{transform:translateX(0);visibility:visible;pointer-events:auto;}
+  .mobile-menu .mm-head{display:flex;justify-content:flex-end;padding:18px;}
+  .mobile-menu nav{display:flex;flex-direction:column;padding:0 28px;gap:2px;}
+  .mobile-menu nav a{
+    font-size:20px;text-transform:uppercase;font-weight:800;
+    padding:16px 0;border-bottom:1px solid var(--line);
+    color:var(--ink);text-decoration:none;display:block;
+  }
+  .mm-overlay{
+    position:fixed;inset:0;background:var(--ink-fixed);opacity:0;
+    transition:opacity .3s;pointer-events:none;z-index:899;
+  }
+  .mm-overlay.open{opacity:.45;pointer-events:auto;}
+
   /* ============ MOBILE NAV ============ */
   @media (max-width:920px){
     nav.primary{
@@ -129,26 +193,6 @@
       display:flex;width:38px;height:38px;align-items:center;justify-content:center;
       border:1px solid var(--line-strong);
     }
-    .mobile-menu{
-      position:fixed;inset:0 0 0 auto;width:84vw;max-width:340px;height:100vh;
-      background:var(--paper);z-index:900;
-      transform:translateX(100%);transition:transform .35s var(--ease);
-      border-left:1px solid var(--line-strong);
-      display:flex;flex-direction:column;
-      overflow-y:auto;
-    }
-    .mobile-menu.open{transform:translateX(0);}
-    .mobile-menu .mm-head{display:flex;justify-content:flex-end;padding:18px;}
-    .mobile-menu nav{display:flex;flex-direction:column;padding:0 28px;gap:2px;}
-    .mobile-menu nav a{
-      font-size:20px;text-transform:uppercase;font-weight:800;
-      padding:16px 0;border-bottom:1px solid var(--line);
-    }
-    .mm-overlay{
-      position:fixed;inset:0;background:var(--ink);opacity:0;
-      transition:opacity .3s;pointer-events:none;z-index:899;
-    }
-    .mm-overlay.open{opacity:.45;pointer-events:auto;}
   }
 
   /* ============ HERO ============ */
@@ -199,7 +243,7 @@
   .hero-visual{
     position:relative;
     aspect-ratio:1/1.05;
-    background:var(--ink);
+    background:var(--ink-fixed);
     border-radius:var(--radius);
     overflow:hidden;
     display:flex;align-items:center;justify-content:center;
@@ -217,10 +261,10 @@
   .hero-stats{
     position:absolute;bottom:18px;left:18px;right:18px;
     display:flex;justify-content:space-between;
-    color:var(--paper);
+    color:var(--paper-fixed);
   }
   .hero-stats .stat{font-size:10px;letter-spacing:.1em;text-transform:uppercase;opacity:.7;}
-  .hero-stats .stat b{display:block;font-size:20px;color:var(--paper);font-family:'Arial Black',sans-serif;}
+  .hero-stats .stat b{display:block;font-size:20px;color:var(--paper-fixed);font-family:var(--font-display);}
 
   @media (max-width:920px){
     .hero-grid{grid-template-columns:1fr;min-height:auto;padding-top:8px;}
@@ -337,14 +381,14 @@
   .empty-state p{color:var(--grey-mid);font-size:14px;}
 
   /* ============ ABOUT ============ */
-  .about{background:var(--ink);color:var(--paper);}
-  .about .ridge path{stroke:var(--paper);}
+  .about{background:var(--ink-fixed);color:var(--paper-fixed);}
+  .about .ridge path{stroke:var(--paper-fixed);}
   .about-grid{display:grid;grid-template-columns:.9fr 1.1fr;gap:60px;align-items:start;}
   .about h2{font-size:clamp(32px,5vw,58px);margin-bottom:28px;}
   .about p{font-size:16px;line-height:1.75;color:#cfcfca;margin-bottom:18px;}
   .about .bolt-word{background:var(--bolt);color:var(--bolt-ink);padding:0 .15em;}
   .pillars{display:grid;grid-template-columns:repeat(2,1fr);gap:1px;background:#ffffff22;border:1px solid #ffffff22;margin-top:30px;}
-  .pillar{padding:20px;background:var(--ink);}
+  .pillar{padding:20px;background:var(--ink-fixed);}
   .pillar .num{font-family:'Courier New',monospace;font-size:11px;color:var(--bolt);display:block;margin-bottom:8px;}
   .pillar h5{font-size:13px;text-transform:uppercase;letter-spacing:.05em;font-weight:800;}
   @media (max-width:920px){.about-grid{grid-template-columns:1fr;gap:36px;}}
@@ -373,18 +417,22 @@
   .clients-strip{
     border-top:1px solid var(--line-strong);
   }
-  .clients-track-wrap{overflow:hidden;padding:50px 0;position:relative;}
-  .clients-track-wrap::before,.clients-track-wrap::after{
-    content:'';position:absolute;top:0;bottom:0;width:80px;z-index:2;pointer-events:none;
+  .clients-stage-wrap{
+    padding:50px 0;display:flex;flex-direction:column;align-items:center;gap:18px;
   }
-  .clients-track-wrap::before{left:0;background:linear-gradient(90deg,var(--paper),transparent);}
-  .clients-track-wrap::after{right:0;background:linear-gradient(270deg,var(--paper),transparent);}
-  .clients-track{
-    display:flex;gap:64px;align-items:center;
-    width:max-content;
-    will-change:transform;
+  .clients-stage{
+    position:relative;width:100%;max-width:300px;height:90px;
   }
-  .clients-track img{height:42px;width:auto;object-fit:contain;filter:grayscale(1);opacity:.75;flex-shrink:0;}
+  .clients-stage img{
+    position:absolute;inset:0;margin:auto;
+    max-width:100%;max-height:100%;width:auto;height:auto;object-fit:contain;
+    filter:grayscale(1);opacity:0;
+    transition:opacity 1s ease-in-out;
+  }
+  .clients-stage img.show{opacity:.78;}
+  .clients-stage .lp{display:flex;gap:5px;}
+  .clients-stage .lp span{width:5px;height:5px;border-radius:50%;background:var(--line-strong);transition:background .3s;}
+  .clients-stage .lp span.on{background:var(--ink);}
   .clients-empty{padding:50px 0;text-align:center;color:var(--grey-mid);font-size:13px;}
 
   /* ============ CONTACT / CTA STRIP ============ */
@@ -397,7 +445,7 @@
   .cta-strip .btn{border-color:var(--ink);}
 
   /* ============ FOOTER ============ */
-  footer{background:var(--ink);color:var(--paper);padding:64px 0 28px;}
+  footer{background:var(--ink-fixed);color:var(--paper-fixed);padding:64px 0 28px;}
   .foot-grid{display:grid;grid-template-columns:1.4fr 1fr 1fr 1fr;gap:40px;margin-bottom:50px;}
   footer h6{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:#ffffff66;margin-bottom:16px;}
   footer ul li{margin-bottom:10px;font-size:14px;color:#d8d8d4;}
@@ -424,7 +472,7 @@
 
   /* ============ MODALS / DRAWERS (shared) ============ */
   .overlay{
-    position:fixed;inset:0;background:var(--ink);opacity:0;z-index:800;
+    position:fixed;inset:0;background:var(--ink-fixed);opacity:0;z-index:800;
     pointer-events:none;transition:opacity .3s;
   }
   .overlay.open{opacity:.55;pointer-events:auto;}
@@ -432,7 +480,7 @@
   .drawer{
     position:fixed;top:0;right:0;height:100vh;width:420px;max-width:92vw;
     background:var(--paper);z-index:850;
-    transform:translateX(100%);transition:transform .4s var(--ease);
+    transform:translateX(100%);transition:transform .4s var(--ease), background-color .35s ease;
     display:flex;flex-direction:column;
     box-shadow:-10px 0 30px #00000022;
   }
@@ -651,6 +699,9 @@
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3h2l2.4 12.4a2 2 0 0 0 2 1.6h7.2a2 2 0 0 0 2-1.6L21 8H6"/><circle cx="9" cy="21" r="1"/><circle cx="18" cy="21" r="1"/></svg>
         <span class="cart-count" id="cartCount" style="display:none">0</span>
       </button>
+      <button class="icon-btn" id="themeToggleBtn" title="Modo oscuro" aria-label="Cambiar tema">
+        <svg id="themeIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+      </button>
       <button class="burger icon-btn" id="burgerBtn" aria-label="Menú">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
       </button>
@@ -752,7 +803,7 @@
       <div>
         <p>PEAK es una empresa <span class="bolt-word">multifuncional</span>: tienda de tecnología y otros productos a precios increíbles, con atención al cliente 24/7 para gestionar compras, envíos y garantías.</p>
         <p>PEAK también gestiona eventos de marketing, logística, publicidad, diseño, infraestructura y estrategia — y pronto, una escuela para aprender nuevas habilidades.</p>
-        <p style="font-size:20px;font-weight:800;color:var(--paper);text-transform:uppercase;">PEAK the action! Es hora de actuar YA!</p>
+        <p style="font-size:20px;font-weight:800;color:var(--paper-fixed);text-transform:uppercase;">PEAK the action! Es hora de actuar YA!</p>
 
         <div class="pillars">
           <div class="pillar"><span class="num">EVENTOS</span><h5>Marketing & activaciones</h5></div>
@@ -1520,60 +1571,38 @@ function renderLogoStage(){
   }
 }
 
-let clientsAnimFrame = null;
-function renderClientsStrip(retryCount){
-  retryCount = retryCount || 0;
+let clientsRotateTimer = null;
+function renderClientsStrip(){
   const wrap = document.getElementById('clientsWrap');
   const clients = STATE.clients || [];
-  if(clientsAnimFrame){ cancelAnimationFrame(clientsAnimFrame); clientsAnimFrame = null; }
+  if(clientsRotateTimer){ clearInterval(clientsRotateTimer); clientsRotateTimer = null; }
 
   if(clients.length===0){
     wrap.innerHTML = `<div class="clients-empty">Pronto verás aquí a las empresas que confían en PEAK.</div>`;
     return;
   }
 
-  const oneSet = clients.map(c=>`<img src="${c.logo}" alt="${escapeHtml(c.name)}" title="${escapeHtml(c.name)}">`).join('');
-  // Insertamos un único set primero para poder medir su ancho real una vez montado en el DOM.
-  wrap.innerHTML = `<div class="clients-track-wrap"><div class="clients-track" id="clientsTrack">${oneSet}</div></div>`;
+  const imgsHtml = clients.map((c,i)=>`<img src="${c.logo}" alt="${escapeHtml(c.name)}" title="${escapeHtml(c.name)}" class="${i===0?'show':''}" data-i="${i}">`).join('');
+  const dotsHtml = clients.length>1 ? `<div class="lp">${clients.map((_,i)=>`<span class="${i===0?'on':''}"></span>`).join('')}</div>` : '';
+  wrap.innerHTML = `<div class="clients-stage-wrap"><div class="clients-stage" id="clientsStage">${imgsHtml}</div>${dotsHtml}</div>`;
 
-  requestAnimationFrame(()=>{
-    const track = document.getElementById('clientsTrack');
-    if(!track) return;
-    const setWidth = track.scrollWidth; // ancho de un set completo, incluyendo el gap final
-    const wrapWidth = wrap.clientWidth || window.innerWidth;
+  if(clients.length<=1) return;
 
-    if((!setWidth || setWidth < 1) && retryCount < 20){
-      // las imágenes aún no han terminado de cargar y no sabemos su ancho real todavía;
-      // reintentamos un máximo de 20 veces (~1/3 seg) en vez de dividir por cero / Infinity
-      clientsAnimFrame = requestAnimationFrame(()=>renderClientsStrip(retryCount+1));
-      return;
-    }
-    if(!setWidth || setWidth < 1) return; // se agotaron los reintentos, evitamos romper el layout
+  const reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if(reduceMotion) return; // se queda fijo en el primer logo, sin animación
 
-    // Repetimos el set las veces necesarias para que SIEMPRE haya al menos 3 sets
-    // de sobra cubriendo el contenedor visible, sin importar si hay 1, 2 o 20 logos.
-    const repeats = Math.max(3, Math.ceil((wrapWidth*2) / setWidth) + 1);
-    track.innerHTML = oneSet.repeat(repeats);
-
-    const reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    if(reduceMotion){ track.style.transform = 'translateX(0)'; return; }
-
-    // velocidad constante en píxeles/segundo, no en duración fija,
-    // así el desplazamiento se ve igual de fluido sin importar cuántos logos haya
-    const pxPerSecond = 55;
-    let offset = 0;
-    let lastTs = null;
-    function step(ts){
-      if(lastTs===null) lastTs = ts;
-      const dt = (ts-lastTs)/1000;
-      lastTs = ts;
-      offset += pxPerSecond*dt;
-      if(offset >= setWidth) offset -= setWidth; // reinicia exactamente al cruzar un set completo: sin salto ni hueco
-      track.style.transform = `translateX(${-offset}px)`;
-      clientsAnimFrame = requestAnimationFrame(step);
-    }
-    clientsAnimFrame = requestAnimationFrame(step);
-  });
+  let idx = 0;
+  clientsRotateTimer = setInterval(()=>{
+    const stage = document.getElementById('clientsStage');
+    if(!stage){ clearInterval(clientsRotateTimer); return; }
+    const imgs = stage.querySelectorAll('img');
+    const dots = wrap.querySelectorAll('.lp span');
+    imgs[idx].classList.remove('show');
+    dots[idx] && dots[idx].classList.remove('on');
+    idx = (idx+1) % imgs.length;
+    imgs[idx].classList.add('show');
+    dots[idx] && dots[idx].classList.add('on');
+  }, 2500); // cada logo se queda 2.5s en pantalla antes de pasar al siguiente
 }
 
 function renderCartBadge(){
@@ -1606,6 +1635,26 @@ function closeMobileMenu(){ mobileMenu.classList.remove('open'); mmOverlay.class
 burgerBtn.addEventListener('click', openMobileMenu);
 document.getElementById('mmClose').addEventListener('click', closeMobileMenu);
 mmOverlay.addEventListener('click', closeMobileMenu);
+
+/* =====================================================================
+   MODO OSCURO
+   ===================================================================== */
+const THEME_KEY = 'peakTheme';
+const ICON_MOON = '<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>';
+const ICON_SUN  = '<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/>';
+function applyTheme(theme){
+  document.documentElement.setAttribute('data-theme', theme);
+  try{ localStorage.setItem(THEME_KEY, theme); }catch(e){}
+  const icon = document.getElementById('themeIcon');
+  const btn = document.getElementById('themeToggleBtn');
+  if(icon) icon.innerHTML = theme === 'dark' ? ICON_SUN : ICON_MOON;
+  if(btn) btn.title = theme === 'dark' ? 'Modo claro' : 'Modo oscuro';
+}
+applyTheme(document.documentElement.getAttribute('data-theme') || 'light');
+document.getElementById('themeToggleBtn').addEventListener('click', ()=>{
+  const current = document.documentElement.getAttribute('data-theme');
+  applyTheme(current === 'dark' ? 'light' : 'dark');
+});
 
 /* =====================================================================
    DRAWERS GENÉRICOS (carrito / cuenta)
