@@ -727,15 +727,16 @@
   <div class="hero-grid">
     <div>
       <span class="hero-eyebrow">Tienda en línea · Bogotá, Colombia</span>
-      <h1 class="display">Es hora<br>de <span class="bolt-word">actuar</span><br>YA!</h1>
+      <h1 class="display" id="heroH1">Es hora<br>de <span class="bolt-word">actuar</span><br>YA!</h1>
       <p class="lede">Tecnología y otros productos a precios increíbles. PEAK conecta logística, diseño y atención 24/7 en una sola tienda que se actualiza en tiempo real.</p>
       <div class="hero-ctas">
         <a href="#tienda" class="btn btn-solid">Ver tienda</a>
         <a href="#nosotros" class="btn btn-ghost">Conócenos</a>
       </div>
     </div>
-    <div class="hero-visual">
-      <svg class="peak-mark" viewBox="0 0 200 160" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <div class="hero-visual" id="heroVisual">
+      <img id="heroImgEl" src="" alt="PEAK" style="display:none;width:100%;height:100%;object-fit:cover;position:absolute;inset:0;">
+      <svg id="heroBgSvg" class="peak-mark" viewBox="0 0 200 160" fill="none" xmlns="http://www.w3.org/2000/svg">
         <path d="M10 140 L60 40 L90 90 L120 20 L190 140 Z" stroke="white" stroke-width="6" stroke-linejoin="round" fill="none"/>
       </svg>
       <div class="hero-stats">
@@ -799,6 +800,8 @@
       <div>
         <span class="section-tag" style="color:#ffffff66">Quiénes somos</span>
         <h2 class="display">Nosotros</h2>
+        <!-- Foto del equipo empresarial (352×418) -->
+        <div id="teamPhotoWrap" style="margin-top:28px;"></div>
       </div>
       <div>
         <p>PEAK es una empresa <span class="bolt-word">multifuncional</span>: tienda de tecnología y otros productos a precios increíbles, con atención al cliente 24/7 para gestionar compras, envíos y garantías.</p>
@@ -986,6 +989,7 @@
       <button class="active" data-sec="dash"><span>◆</span><span class="lbl">Resumen</span></button>
       <button data-sec="productos"><span>▣</span><span class="lbl">Productos</span></button>
       <button data-sec="categorias"><span>▤</span><span class="lbl">Categorías</span></button>
+      <button data-sec="portada"><span>✦</span><span class="lbl">Portada</span></button>
       <button data-sec="marca"><span>●</span><span class="lbl">Logo & marca</span></button>
       <button data-sec="clientesadm"><span>★</span><span class="lbl">Clientes (logos)</span></button>
       <button data-sec="pedidos"><span>▥</span><span class="lbl">Pedidos</span></button>
@@ -1079,6 +1083,49 @@
           <thead><tr><th>Categoría</th><th>Descripción</th><th>Productos</th><th></th></tr></thead>
           <tbody id="adminCatTable"></tbody>
         </table>
+      </div>
+
+      <!-- PORTADA -->
+      <div class="admin-section" id="sec-portada">
+        <h2>Portada (Hero)</h2>
+        <p class="hint">Edita la frase principal, sube la imagen del lado derecho del hero y la foto del equipo en "Nosotros".</p>
+
+        <div class="admin-card">
+          <h4>Frase principal del hero</h4>
+          <p style="font-size:13px;color:var(--graphite);margin-bottom:12px;line-height:1.6">Escribe la frase que aparece en grande en la portada. Usa saltos de línea para controlar el quiebre del texto. Si lo dejas vacío se mostrará el texto original.</p>
+          <div class="field">
+            <label>Frase del hero</label>
+            <textarea id="heroTextInput" rows="4" placeholder="Ej: Es hora de actuar YA!" style="resize:vertical;"></textarea>
+          </div>
+          <div style="display:flex;gap:10px;margin-top:4px;flex-wrap:wrap;">
+            <button class="btn btn-solid" onclick="saveHeroText()">Guardar frase</button>
+            <button class="btn btn-ghost" onclick="resetHeroText()">Restaurar original</button>
+          </div>
+        </div>
+
+        <div class="admin-card">
+          <h4>Imagen del hero (lado derecho)</h4>
+          <p style="font-size:13px;color:var(--graphite);margin-bottom:12px;line-height:1.6">Esta imagen ocupa el panel derecho de la portada, junto a la frase principal. Soporta PNG (con transparencia) y JPG. Si no subes ninguna, se muestra el gráfico de montaña por defecto.</p>
+          <div class="img-drop" id="hero_dropzone">
+            <input type="file" id="hero_image" accept="image/*">
+            <div class="dz-icon">⤒</div>
+            <div class="dz-txt">Arrastra o toca para subir la imagen del hero</div>
+          </div>
+          <div class="img-preview-grid" id="hero_preview" style="margin-top:12px;"></div>
+          <button class="btn btn-ghost" onclick="removeHeroImage()" style="font-size:11px;margin-top:10px;">Eliminar imagen del hero</button>
+        </div>
+
+        <div class="admin-card">
+          <h4>Foto del equipo en "Nosotros" (352×418 px)</h4>
+          <p style="font-size:13px;color:var(--graphite);margin-bottom:12px;line-height:1.6">Esta foto aparece debajo del título "Quiénes somos" en la sección Nosotros. Tamaño recomendado: 352×418 px. Soporta PNG y JPG.</p>
+          <div class="img-drop" id="team_dropzone">
+            <input type="file" id="team_image" accept="image/*">
+            <div class="dz-icon">⤒</div>
+            <div class="dz-txt">Arrastra o toca para subir la foto del equipo (352×418)</div>
+          </div>
+          <div class="img-preview-grid" id="team_preview" style="margin-top:12px;"></div>
+          <button class="btn btn-ghost" onclick="removeTeamPhoto()" style="font-size:11px;margin-top:10px;">Eliminar foto del equipo</button>
+        </div>
       </div>
 
       <!-- MARCA / LOGO -->
@@ -1213,6 +1260,9 @@ let STATE = {
   clients: [],
   brandLogos: [],   // array de dataURLs/urls del logo horizontal
   isoLogo: null,
+  heroText: null,   // frase personalizada del hero (null = texto por defecto)
+  heroImage: null,  // imagen del lado derecho del hero (null = SVG por defecto)
+  teamPhoto: null,  // foto de los empresarios (352×418) en sección Nosotros
   cart: JSON.parse(localStorage.getItem(LS_KEYS.cart) || '[]'),
   session: JSON.parse(localStorage.getItem(LS_KEYS.session) || 'null'),
   activeCategoryFilter: 'todos',
@@ -1220,7 +1270,7 @@ let STATE = {
   modalProduct: null,
   modalQty: 1,
   editingProductId: null,
-  pendingImages: { product: null, logos: [], iso: null, client: null },
+  pendingImages: { product: null, logos: [], iso: null, client: null, hero: null, team: null },
   lastSyncOk: false,
 };
 
@@ -1371,6 +1421,9 @@ function loadCache(){
       STATE.clients = c.clients || [];
       STATE.brandLogos = c.brandLogos || [];
       STATE.isoLogo = c.isoLogo || null;
+      STATE.heroText = c.heroText || null;
+      STATE.heroImage = c.heroImage || null;
+      STATE.teamPhoto = c.teamPhoto || null;
       return true;
     }
   }catch(e){}
@@ -1383,6 +1436,9 @@ function saveCache(){
     clients: STATE.clients,
     brandLogos: STATE.brandLogos,
     isoLogo: STATE.isoLogo,
+    heroText: STATE.heroText,
+    heroImage: STATE.heroImage,
+    teamPhoto: STATE.teamPhoto,
   }));
 }
 function seedDemoIfEmpty(){
@@ -1440,6 +1496,8 @@ function renderAll(){
   renderClientsStrip();
   renderCartBadge();
   renderHeaderBrand();
+  renderHeroContent();
+  renderTeamPhoto();
 }
 
 /* ---------- logo del header (isologo o primer logo de marca, con fallback a texto) ---------- */
@@ -1454,6 +1512,45 @@ function renderHeaderBrand(){
   }else{
     img.style.display = 'none';
     text.style.display = 'inline';
+  }
+}
+
+/* ---------- frase e imagen del hero ---------- */
+function renderHeroContent(){
+  // Frase
+  const heroH1 = document.getElementById('heroH1');
+  if(heroH1){
+    if(STATE.heroText && STATE.heroText.trim()){
+      heroH1.innerHTML = escapeHtml(STATE.heroText).replace(/\n/g,'<br>');
+    } else {
+      heroH1.innerHTML = 'Es hora<br>de <span class="bolt-word">actuar</span><br>YA!';
+    }
+  }
+  // Imagen del hero (lado derecho)
+  const heroVisual = document.getElementById('heroVisual');
+  const heroImgEl = document.getElementById('heroImgEl');
+  const heroBgSvg = document.getElementById('heroBgSvg');
+  if(!heroVisual) return;
+  if(STATE.heroImage){
+    if(heroImgEl){
+      heroImgEl.src = STATE.heroImage;
+      heroImgEl.style.display = 'block';
+    }
+    if(heroBgSvg) heroBgSvg.style.display = 'none';
+  } else {
+    if(heroImgEl) heroImgEl.style.display = 'none';
+    if(heroBgSvg) heroBgSvg.style.display = 'block';
+  }
+}
+
+/* ---------- foto de los empresarios en sección Nosotros ---------- */
+function renderTeamPhoto(){
+  const wrap = document.getElementById('teamPhotoWrap');
+  if(!wrap) return;
+  if(STATE.teamPhoto){
+    wrap.innerHTML = `<img src="${STATE.teamPhoto}" alt="Equipo PEAK" style="width:352px;max-width:100%;height:418px;object-fit:cover;border-radius:2px;display:block;">`;
+  } else {
+    wrap.innerHTML = `<div style="width:352px;max-width:100%;height:418px;border:1.5px dashed #ffffff33;display:flex;align-items:center;justify-content:center;border-radius:2px;color:#ffffff44;font-size:12px;text-align:center;padding:20px;">Foto del equipo<br>(352×418 px)</div>`;
   }
 }
 
@@ -1931,6 +2028,7 @@ document.getElementById('footWhatsapp').addEventListener('click', e=>{ e.prevent
    ===================================================================== */
 function readImageAsCompressedDataUrl(file, maxWidth){
   return new Promise((resolve, reject)=>{
+    const isPng = file.type === 'image/png';
     const reader = new FileReader();
     reader.onload = ()=>{
       const img = new Image();
@@ -1940,8 +2038,16 @@ function readImageAsCompressedDataUrl(file, maxWidth){
         const h = Math.round(img.height*scale);
         const canvas = document.createElement('canvas');
         canvas.width = w; canvas.height = h;
-        canvas.getContext('2d').drawImage(img,0,0,w,h);
-        resolve(canvas.toDataURL('image/jpeg', 0.82));
+        const ctx = canvas.getContext('2d');
+        if(isPng){
+          // Fondo transparente para PNG — NO pintar fondo blanco/negro
+          ctx.clearRect(0,0,w,h);
+          ctx.drawImage(img,0,0,w,h);
+          resolve(canvas.toDataURL('image/png'));
+        } else {
+          ctx.drawImage(img,0,0,w,h);
+          resolve(canvas.toDataURL('image/jpeg', 0.82));
+        }
       };
       img.onerror = reject;
       img.src = reader.result;
@@ -1980,6 +2086,7 @@ function refreshAdminViews(){
   renderAdminOrdersTable();
   renderAdminLogoPreviews();
   renderDashboard();
+  initPortadaAdmin();
   document.getElementById('webAppUrlInput').value = getWebAppUrl();
   setSyncIndicator(STATE.lastSyncOk);
 }
@@ -2230,6 +2337,85 @@ function renderAdminLogoPreviews(){
   logoWrap.innerHTML = (STATE.brandLogos||[]).map((src,i)=>`<div class="ip"><img src="${src}"><button onclick="removeBrandLogo(${i})">×</button></div>`).join('');
   const isoWrap = document.getElementById('iso_preview');
   isoWrap.innerHTML = STATE.isoLogo ? `<div class="ip"><img src="${STATE.isoLogo}"><button onclick="removeIsoLogo()">×</button></div>` : '';
+}
+
+/* =====================================================================
+   ADMIN — PORTADA (frase hero + imagen hero + foto equipo)
+   ===================================================================== */
+function initPortadaAdmin(){
+  const heroTextInput = document.getElementById('heroTextInput');
+  if(heroTextInput && STATE.heroText) heroTextInput.value = STATE.heroText;
+
+  // imagen hero preview
+  const heroPreview = document.getElementById('hero_preview');
+  if(heroPreview) heroPreview.innerHTML = STATE.heroImage
+    ? `<div class="ip"><img src="${STATE.heroImage}"><button onclick="removeHeroImage()">×</button></div>`
+    : '';
+
+  // foto equipo preview
+  const teamPreview = document.getElementById('team_preview');
+  if(teamPreview) teamPreview.innerHTML = STATE.teamPhoto
+    ? `<div class="ip" style="width:88px;height:104px;"><img src="${STATE.teamPhoto}" style="width:100%;height:100%;object-fit:cover;"><button onclick="removeTeamPhoto()" style="position:absolute;top:2px;right:2px;background:var(--ink);color:var(--paper);width:18px;height:18px;font-size:11px;display:flex;align-items:center;justify-content:center;">×</button></div>`
+    : '';
+}
+
+function saveHeroText(){
+  const val = document.getElementById('heroTextInput').value.trim();
+  STATE.heroText = val || null;
+  saveCache();
+  renderHeroContent();
+  showToast(val ? 'Frase actualizada en la portada' : 'Frase restaurada al original');
+}
+function resetHeroText(){
+  STATE.heroText = null;
+  document.getElementById('heroTextInput').value = '';
+  saveCache();
+  renderHeroContent();
+  showToast('Frase restaurada al original');
+}
+
+document.getElementById('hero_image').addEventListener('change', async (e)=>{
+  const file = e.target.files[0];
+  if(!file) return;
+  const dataUrl = await readImageAsCompressedDataUrl(file, 1400);
+  STATE.heroImage = dataUrl;
+  STATE.pendingImages.hero = dataUrl;
+  saveCache();
+  document.getElementById('hero_preview').innerHTML = `<div class="ip"><img src="${dataUrl}"><button onclick="removeHeroImage()">×</button></div>`;
+  renderHeroContent();
+  showToast('Imagen del hero actualizada');
+  e.target.value = '';
+});
+
+function removeHeroImage(){
+  STATE.heroImage = null;
+  STATE.pendingImages.hero = null;
+  saveCache();
+  document.getElementById('hero_preview').innerHTML = '';
+  renderHeroContent();
+  showToast('Imagen del hero eliminada');
+}
+
+document.getElementById('team_image').addEventListener('change', async (e)=>{
+  const file = e.target.files[0];
+  if(!file) return;
+  const dataUrl = await readImageAsCompressedDataUrl(file, 800);
+  STATE.teamPhoto = dataUrl;
+  STATE.pendingImages.team = dataUrl;
+  saveCache();
+  document.getElementById('team_preview').innerHTML = `<div class="ip" style="width:88px;height:104px;"><img src="${dataUrl}" style="width:100%;height:100%;object-fit:cover;"></div>`;
+  renderTeamPhoto();
+  showToast('Foto del equipo actualizada en Nosotros');
+  e.target.value = '';
+});
+
+function removeTeamPhoto(){
+  STATE.teamPhoto = null;
+  STATE.pendingImages.team = null;
+  saveCache();
+  document.getElementById('team_preview').innerHTML = '';
+  renderTeamPhoto();
+  showToast('Foto del equipo eliminada');
 }
 
 /* =====================================================================
