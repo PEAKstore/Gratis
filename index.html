@@ -551,8 +551,27 @@
   }
   .modal.open .modal-card{transform:translateY(0);}
   .modal-card .m-close{position:absolute;top:16px;right:16px;z-index:5;background:var(--paper);}
-  .modal-img{aspect-ratio:1/1;background:var(--graphite);overflow:hidden;}
+  .modal-img{aspect-ratio:1/1;background:var(--graphite);overflow:hidden;position:relative;}
   .modal-img img{width:100%;height:100%;object-fit:cover;}
+  .modal-img-arrow{
+    position:absolute;top:50%;transform:translateY(-50%);width:36px;height:36px;
+    background:var(--paper);border:none;font-size:20px;line-height:1;cursor:pointer;
+    display:flex;align-items:center;justify-content:center;z-index:3;color:var(--ink);
+    box-shadow:0 1px 4px rgba(0,0,0,.2);
+  }
+  .modal-img-arrow.left{left:10px;}
+  .modal-img-arrow.right{right:10px;}
+  .modal-thumbs{
+    position:absolute;left:0;right:0;bottom:0;display:flex;gap:6px;padding:10px;
+    background:linear-gradient(to top, rgba(0,0,0,.45), transparent);
+    overflow-x:auto;z-index:2;
+  }
+  .modal-thumbs .mt{
+    width:44px;height:44px;flex:0 0 auto;border:2px solid transparent;cursor:pointer;
+    opacity:.65;overflow:hidden;transition:opacity .2s,border-color .2s;
+  }
+  .modal-thumbs .mt img{width:100%;height:100%;object-fit:cover;}
+  .modal-thumbs .mt.active{opacity:1;border-color:var(--bolt);}
   .modal-body{padding:40px 36px;display:flex;flex-direction:column;}
   .modal-body .p-cat{font-size:11px;color:var(--grey-mid);text-transform:uppercase;letter-spacing:.08em;margin-bottom:10px;}
   .modal-body h2{font-size:28px;margin-bottom:14px;text-transform:none;letter-spacing:-0.01em;}
@@ -658,7 +677,14 @@
   .img-preview-grid .ip button{
     position:absolute;top:2px;right:2px;background:var(--ink);color:var(--paper);
     width:18px;height:18px;font-size:11px;display:flex;align-items:center;justify-content:center;
+    border:none;cursor:pointer;
   }
+  .img-preview-grid .ip .ip-cover{
+    position:absolute;bottom:0;left:0;right:0;background:var(--bolt);color:var(--ink);
+    font-size:9px;font-weight:800;text-align:center;text-transform:uppercase;letter-spacing:.04em;
+    padding:2px 0;
+  }
+  .img-preview-grid .ip{cursor:grab;}
 
   .stat-cards{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--line-strong);border:1px solid var(--line-strong);margin-bottom:32px;}
   .stat-card{background:var(--paper);padding:22px;}
@@ -673,6 +699,22 @@
     animation:toastIn .3s var(--ease);
   }
   @keyframes toastIn{from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:translateY(0);}}
+
+  .new-prod-stack{position:fixed;top:24px;right:24px;z-index:1000;display:flex;flex-direction:column;gap:12px;max-width:340px;}
+  .new-prod-card{
+    background:var(--paper);border:1px solid var(--line-strong);box-shadow:0 8px 28px rgba(0,0,0,.16);
+    display:flex;gap:12px;padding:14px;align-items:center;cursor:pointer;
+    animation:newProdIn .4s var(--ease);border-left:4px solid var(--bolt);
+  }
+  .new-prod-card img{width:52px;height:52px;object-fit:cover;flex-shrink:0;background:var(--graphite);}
+  .new-prod-card .npc-body{flex:1;min-width:0;}
+  .new-prod-card .npc-tag{font-size:10px;text-transform:uppercase;letter-spacing:.06em;color:var(--bolt-dark,var(--ink));font-weight:800;margin-bottom:3px;}
+  .new-prod-card .npc-name{font-size:13px;font-weight:700;line-height:1.3;margin-bottom:2px;
+    overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .new-prod-card .npc-price{font-size:12px;color:var(--grey-mid);font-weight:600;}
+  .new-prod-card .npc-close{flex-shrink:0;font-size:14px;color:var(--grey-mid);background:none;border:none;cursor:pointer;padding:4px;}
+  @keyframes newProdIn{from{opacity:0;transform:translateX(24px);}to{opacity:1;transform:translateX(0);}}
+  @media (max-width:680px){.new-prod-stack{left:16px;right:16px;top:16px;max-width:none;}}
 
   .config-row{display:flex;justify-content:space-between;align-items:center;padding:14px 0;border-bottom:1px solid var(--line);}
   .config-row code{font-size:12px;background:var(--line);padding:6px 10px;border-radius:3px;word-break:break-all;}
@@ -974,7 +1016,12 @@
 <div class="modal" id="productModal">
   <div class="modal-card">
     <button class="close-x m-close" onclick="closeProductModal()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
-    <div class="modal-img"><img id="modalImg" src="" alt=""></div>
+    <div class="modal-img">
+      <img id="modalImg" src="" alt="">
+      <button class="modal-img-arrow left" id="modalImgPrev" onclick="modalImgNav(-1)" style="display:none">‹</button>
+      <button class="modal-img-arrow right" id="modalImgNext" onclick="modalImgNav(1)" style="display:none">›</button>
+      <div class="modal-thumbs" id="modalThumbs"></div>
+    </div>
     <div class="modal-body">
       <span class="p-cat" id="modalCat">—</span>
       <h2 id="modalName">—</h2>
@@ -1055,11 +1102,11 @@
             </div>
             <div class="field full"><label>Descripción</label><textarea id="pf_desc" rows="3" placeholder="Describe el producto…"></textarea></div>
             <div class="field full">
-              <label>Foto del producto</label>
+              <label>Fotos del producto <span style="color:var(--grey-mid);font-weight:400">(puedes subir varias — la primera será la portada)</span></label>
               <div class="img-drop" id="pf_dropzone">
-                <input type="file" id="pf_image" accept="image/*">
+                <input type="file" id="pf_image" accept="image/*" multiple>
                 <div class="dz-icon">⤒</div>
-                <div class="dz-txt">Arrastra o toca para subir la foto</div>
+                <div class="dz-txt">Arrastra o toca para subir una o varias fotos</div>
               </div>
               <div class="img-preview-grid" id="pf_preview"></div>
             </div>
@@ -1250,6 +1297,7 @@
 </div>
 
 <div class="toast-stack" id="toastStack"></div>
+<div class="new-prod-stack" id="newProdStack"></div>
 
 <script>
 /* =====================================================================
@@ -1295,8 +1343,9 @@ let STATE = {
   searchTerm: '',
   modalProduct: null,
   modalQty: 1,
+  modalImgIdx: 0,
   editingProductId: null,
-  pendingImages: { product: null, logos: [], iso: null, client: null, hero: null, team: null },
+  pendingImages: { product: [], logos: [], iso: null, client: null, hero: null, team: null },
   lastSyncOk: false,
 };
 
@@ -1317,6 +1366,76 @@ function showToast(msg, isErr){
   t.textContent = msg;
   stack.appendChild(t);
   setTimeout(()=>{ t.style.transition='opacity .4s'; t.style.opacity='0'; setTimeout(()=>t.remove(),400); }, 3200);
+}
+
+/* =====================================================================
+   NOTIFICACIONES DE PRODUCTO NUEVO (en tiempo real)
+   Cuando el sync con el backend trae un id de producto que no existía
+   en el sync anterior, mostramos una tarjeta destacada + sonido.
+   El sonido se genera con Web Audio API (sin archivos .mp3 externos),
+   así funciona igual en GitHub Pages sin depender de ninguna red.
+   ===================================================================== */
+let audioCtx = null;
+function playPositiveChime(){
+  try{
+    if(!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    if(audioCtx.state === 'suspended') audioCtx.resume();
+    const now = audioCtx.currentTime;
+    // Pequeño arpegio ascendente (do-mi-sol agudo) — sonido limpio y positivo.
+    const notes = [523.25, 659.25, 783.99, 1046.50];
+    notes.forEach((freq, i)=>{
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.type = 'sine';
+      osc.frequency.value = freq;
+      const t0 = now + i*0.09;
+      gain.gain.setValueAtTime(0, t0);
+      gain.gain.linearRampToValueAtTime(0.18, t0 + 0.02);
+      gain.gain.exponentialRampToValueAtTime(0.0001, t0 + 0.35);
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      osc.start(t0);
+      osc.stop(t0 + 0.4);
+    });
+  }catch(e){ console.warn('No se pudo reproducir el sonido de notificación', e); }
+}
+
+function showNewProductNotification(product){
+  const stack = document.getElementById('newProdStack');
+  const card = document.createElement('div');
+  card.className = 'new-prod-card';
+  const img = (product.images && product.images[0]) || '';
+  card.innerHTML = `
+    ${img ? `<img src="${img}">` : `<div style="width:52px;height:52px;background:var(--graphite);flex-shrink:0"></div>`}
+    <div class="npc-body">
+      <div class="npc-tag">✦ Nuevo producto</div>
+      <div class="npc-name">${escapeHtml(product.name)}</div>
+      <div class="npc-price">${fmtCOP(product.price)}</div>
+    </div>
+    <button class="npc-close" onclick="event.stopPropagation();this.closest('.new-prod-card').remove()">×</button>
+  `;
+  card.addEventListener('click', ()=>{
+    card.remove();
+    scrollToSection('tienda');
+    closeAllDrawers();
+    setTimeout(()=>openProductModal(product.id), 350);
+  });
+  stack.appendChild(card);
+  setTimeout(()=>{
+    card.style.transition = 'opacity .4s, transform .4s';
+    card.style.opacity = '0';
+    card.style.transform = 'translateX(24px)';
+    setTimeout(()=>card.remove(), 400);
+  }, 7000);
+}
+
+function notifyNewProducts(newProducts){
+  if(!newProducts || newProducts.length === 0) return;
+  playPositiveChime();
+  // Si llegan varios a la vez, los mostramos en cascada (no todos pegados).
+  newProducts.forEach((p, i)=>{
+    setTimeout(()=>showNewProductNotification(p), i*450);
+  });
 }
 
 function escapeHtml(str){
@@ -1498,7 +1617,13 @@ function seedDemoIfEmpty(){
  * Sincroniza con el backend (Apps Script). Si hay conexión, los datos del
  * sheet REEMPLAZAN el caché (fuente de verdad). Si no hay conexión,
  * seguimos mostrando el caché/demo para que la tienda nunca se vea vacía.
+ *
+ * Además, cada sync compara los ids de productos contra el sync anterior:
+ * si aparece un id nuevo, se dispara una notificación visual + sonido
+ * (solo a partir del segundo sync exitoso, para no notificar de golpe
+ * todo el catálogo la primera vez que se abre la tienda).
  */
+let hasSyncedOnce = false;
 async function syncFromBackend(silent){
   const url = getWebAppUrl();
   if(!url){
@@ -1510,7 +1635,10 @@ async function syncFromBackend(silent){
   }
   const r = await apiCall('getStoreData', {});
   if(r && r.ok && r.data){
-    STATE.products   = r.data.products   || [];
+    const previousIds = new Set(STATE.products.map(p=>p.id));
+    const incomingProducts = r.data.products || [];
+
+    STATE.products   = incomingProducts;
     STATE.categories = r.data.categories || [];
     STATE.clients     = r.data.clients     || [];
     STATE.brandLogos  = r.data.brandLogos  || [];
@@ -1521,6 +1649,12 @@ async function syncFromBackend(silent){
     saveCache();
     setSyncIndicator(true);
     renderAll();
+
+    if(hasSyncedOnce){
+      const brandNewProducts = incomingProducts.filter(p => !previousIds.has(p.id));
+      notifyNewProducts(brandNewProducts);
+    }
+    hasSyncedOnce = true;
   }else{
     setSyncIndicator(false);
     if(!silent) showToast('No se pudo sincronizar, mostrando última versión guardada', true);
@@ -1925,7 +2059,8 @@ function openProductModal(id){
   if(!p) return;
   STATE.modalProduct = p;
   STATE.modalQty = 1;
-  document.getElementById('modalImg').src = (p.images && p.images[0]) || '';
+  STATE.modalImgIdx = 0;
+  renderModalGallery();
   document.getElementById('modalCat').textContent = catName(p.categoryId);
   document.getElementById('modalName').textContent = p.name;
   document.getElementById('modalPrice').innerHTML = (p.oldPrice?`<span class="old" style="font-size:15px;color:var(--grey-soft);text-decoration:line-through;margin-right:8px">${fmtCOP(p.oldPrice)}</span>`:'') + fmtCOP(p.price);
@@ -1938,6 +2073,36 @@ function openProductModal(id){
   btn.style.opacity = outOfStock ? .4 : 1;
   btn.style.cursor = outOfStock ? 'not-allowed' : 'pointer';
   document.getElementById('productModal').classList.add('open');
+}
+
+function renderModalGallery(){
+  const p = STATE.modalProduct;
+  if(!p) return;
+  const images = (p.images && p.images.length) ? p.images : [''];
+  const idx = STATE.modalImgIdx || 0;
+  document.getElementById('modalImg').src = images[idx] || '';
+
+  const showNav = images.length > 1;
+  document.getElementById('modalImgPrev').style.display = showNav ? 'flex' : 'none';
+  document.getElementById('modalImgNext').style.display = showNav ? 'flex' : 'none';
+
+  const thumbsEl = document.getElementById('modalThumbs');
+  thumbsEl.innerHTML = showNav ? images.map((src,i)=>`
+    <div class="mt ${i===idx?'active':''}" onclick="setModalImg(${i})"><img src="${src}"></div>
+  `).join('') : '';
+}
+
+function setModalImg(i){
+  STATE.modalImgIdx = i;
+  renderModalGallery();
+}
+
+function modalImgNav(dir){
+  const p = STATE.modalProduct;
+  if(!p || !p.images || p.images.length<2) return;
+  const len = p.images.length;
+  STATE.modalImgIdx = ((STATE.modalImgIdx||0) + dir + len) % len;
+  renderModalGallery();
 }
 function closeProductModal(){
   document.getElementById('productModal').classList.remove('open');
@@ -2189,16 +2354,57 @@ function populateCategorySelect(){
 }
 
 document.getElementById('pf_image').addEventListener('change', async (e)=>{
-  const file = e.target.files[0];
-  if(!file) return;
-  const dataUrl = await readImageAsCompressedDataUrl(file, 1200);
-  STATE.pendingImages.product = dataUrl;
-  document.getElementById('pf_preview').innerHTML = `<div class="ip"><img src="${dataUrl}"><button onclick="STATE.pendingImages.product=null;this.closest('.ip').remove()">×</button></div>`;
+  const files = Array.from(e.target.files || []);
+  if(files.length === 0) return;
+  if(!Array.isArray(STATE.pendingImages.product)) STATE.pendingImages.product = [];
+
+  for(const file of files){
+    const dataUrl = await readImageAsCompressedDataUrl(file, 1200);
+    STATE.pendingImages.product.push(dataUrl);
+  }
+  renderProductImagePreview();
+  e.target.value = ''; // permite volver a elegir más fotos sin que el navegador ignore la selección
 });
+
+function renderProductImagePreview(){
+  const imgs = STATE.pendingImages.product || [];
+  document.getElementById('pf_preview').innerHTML = imgs.map((src, i) => `
+    <div class="ip" draggable="true" data-idx="${i}">
+      <img src="${src}">
+      <button onclick="removeProductImage(${i})" title="Quitar foto">×</button>
+      ${i===0 ? '<span class="ip-cover">Portada</span>' : ''}
+    </div>
+  `).join('');
+  attachProductImageDragHandlers();
+}
+
+function removeProductImage(idx){
+  STATE.pendingImages.product.splice(idx, 1);
+  renderProductImagePreview();
+}
+
+function attachProductImageDragHandlers(){
+  const grid = document.getElementById('pf_preview');
+  let dragFrom = null;
+  grid.querySelectorAll('.ip').forEach(el=>{
+    el.addEventListener('dragstart', ()=>{ dragFrom = Number(el.dataset.idx); el.style.opacity='.4'; });
+    el.addEventListener('dragend', ()=>{ el.style.opacity='1'; });
+    el.addEventListener('dragover', (ev)=> ev.preventDefault());
+    el.addEventListener('drop', (ev)=>{
+      ev.preventDefault();
+      const dragTo = Number(el.dataset.idx);
+      if(dragFrom === null || dragFrom === dragTo) return;
+      const imgs = STATE.pendingImages.product;
+      const [moved] = imgs.splice(dragFrom, 1);
+      imgs.splice(dragTo, 0, moved);
+      renderProductImagePreview();
+    });
+  });
+}
 
 function resetProductForm(){
   STATE.editingProductId = null;
-  STATE.pendingImages.product = null;
+  STATE.pendingImages.product = [];
   document.getElementById('pf_name').value = '';
   document.getElementById('pf_price').value = '';
   document.getElementById('pf_oldprice').value = '';
@@ -2223,7 +2429,8 @@ function editProduct(id){
   document.getElementById('pf_stock').value = p.stock;
   document.getElementById('pf_status').value = p.status;
   document.getElementById('pf_desc').value = p.desc || '';
-  document.getElementById('pf_preview').innerHTML = (p.images&&p.images[0]) ? `<div class="ip"><img src="${p.images[0]}"></div>` : '';
+  STATE.pendingImages.product = (p.images && p.images.length) ? p.images.slice() : [];
+  renderProductImagePreview();
   document.getElementById('prodFormTitle').textContent = 'Editando: ' + p.name;
   document.getElementById('pf_saveBtn').textContent = 'Guardar cambios';
   document.getElementById('pf_cancelBtn').style.display = 'inline-flex';
@@ -2241,12 +2448,7 @@ async function saveProduct(){
 
   if(!name || !categoryId || !price){ showToast('Nombre, categoría y precio son obligatorios.', true); return; }
 
-  let images = [];
-  if(STATE.pendingImages.product) images = [STATE.pendingImages.product];
-  else if(STATE.editingProductId){
-    const existing = STATE.products.find(p=>p.id===STATE.editingProductId);
-    images = (existing && existing.images) || [];
-  }
+  const images = Array.isArray(STATE.pendingImages.product) ? STATE.pendingImages.product.slice() : [];
 
   const productPayload = { name, categoryId, price, oldPrice, stock, status, desc, images };
 
@@ -2614,6 +2816,11 @@ function downloadAppsScript(){
  * (sin Drive ni ningún servicio externo), con control de tamaño por
  * celda para que nunca se corrompan ni queden invisibles para nadie.
  *
+ * ✅ Cada foto de producto vive en su PROPIA fila de la hoja
+ *    "ProductImages" (productId, order, dataUrl), así un producto
+ *    puede tener TANTAS fotos como quieras sin chocar contra el
+ *    límite de 50.000 caracteres por celda de Google Sheets.
+ *
  * INSTALACIÓN:
  * 1. Abre tu Google Sheet (ID: ${PEAK_CONFIG.spreadsheetId}).
  * 2. Ve a Extensiones > Apps Script.
@@ -2634,6 +2841,7 @@ const MAX_CELL_CHARS = 49000;
 
 const SHEETS = {
   products: 'Productos',
+  productImages: 'ProductImages',
   categories: 'Categorias',
   clients: 'Clientes',
   brand: 'Marca',
@@ -2646,7 +2854,8 @@ function getSS(){ return SpreadsheetApp.openById(SPREADSHEET_ID); }
 function ensureSheets(){
   const ss = getSS();
   const headers = {
-    [SHEETS.products]: ['id','name','categoryId','price','oldPrice','stock','status','desc','images'],
+    [SHEETS.products]: ['id','name','categoryId','price','oldPrice','stock','status','desc'],
+    [SHEETS.productImages]: ['productId','order','dataUrl'],
     [SHEETS.categories]: ['id','name','desc'],
     [SHEETS.clients]: ['id','name','logo'],
     [SHEETS.brand]: ['key','value'],
@@ -2681,9 +2890,33 @@ function migrateLegacyBrandLogos(){
   }
 }
 
+// Migra productos viejos que aún tengan su columna "images" (JSON array
+// en una sola celda) hacia la hoja ProductImages (una fila por foto).
+// Corre una sola vez por producto; después no hace nada.
+function migrateLegacyProductImages(){
+  const sh = getSS().getSheetByName(SHEETS.products);
+  const rows = sh.getDataRange().getValues();
+  if(rows.length < 1) return;
+  const headers = rows[0];
+  const imagesColIdx = headers.indexOf('images');
+  if(imagesColIdx === -1) return; // ya migrado, la columna ya no existe
+
+  const idColIdx = headers.indexOf('id');
+  for(let i=1;i<rows.length;i++){
+    const productId = rows[i][idColIdx];
+    const legacyImages = safeParseArray(rows[i][imagesColIdx]);
+    legacyImages.forEach((url, order)=>{
+      if(!url) return;
+      appendRow(SHEETS.productImages, [productId, order, url]);
+    });
+  }
+  sh.deleteColumn(imagesColIdx+1);
+}
+
 function doPost(e){
   ensureSheets();
   migrateLegacyBrandLogos();
+  migrateLegacyProductImages();
   let body;
   try{ body = JSON.parse(e.postData.contents); }catch(err){ return jsonOut({ok:false,error:'bad_request'}); }
   const action = body.action;
@@ -2695,7 +2928,7 @@ function doPost(e){
       case 'getStoreData': return jsonOut({ok:true, data:getStoreData()});
       case 'createProduct': return jsonOut(createProduct(payload));
       case 'updateProduct': return jsonOut(updateProduct(payload));
-      case 'deleteProduct': return jsonOut({ok:true, ...deleteRowById(SHEETS.products, payload.id)});
+      case 'deleteProduct': return jsonOut({ok:true, ...deleteProductWithImages(payload.id)});
       case 'createCategory': return jsonOut({ok:true, ...appendRow(SHEETS.categories, [payload.id,payload.name,payload.desc||''])});
       case 'deleteCategory': return jsonOut({ok:true, ...deleteRowById(SHEETS.categories, payload.id)});
       case 'createClient': return jsonOut(createClient(payload));
@@ -2719,6 +2952,7 @@ function doPost(e){
 function doGet(e){
   ensureSheets();
   migrateLegacyBrandLogos();
+  migrateLegacyProductImages();
   return jsonOut({ok:true, data:getStoreData()});
 }
 
@@ -2744,8 +2978,15 @@ function getStoreData(){
     price:Number(p.price)||0,
     oldPrice: p.oldPrice ? Number(p.oldPrice) : null,
     stock:Number(p.stock)||0,
-    images: safeParseArray(p.images),
   }));
+  const allImages = sheetToObjects(SHEETS.productImages);
+  products.forEach(p=>{
+    p.images = allImages
+      .filter(img=>img.productId===p.id)
+      .sort((a,b)=>Number(a.order)-Number(b.order))
+      .map(img=>img.dataUrl);
+  });
+
   const categories = sheetToObjects(SHEETS.categories);
   const clients = sheetToObjects(SHEETS.clients);
   const brandRows = sheetToObjects(SHEETS.brand);
@@ -2770,24 +3011,56 @@ function appendRow(sheetName, rowArray){
   return {};
 }
 
+// Reemplaza TODAS las fotos de un producto: borra sus filas viejas en
+// ProductImages y escribe las nuevas, una fila por foto, en orden.
+function replaceProductImages(productId, images){
+  const sh = getSS().getSheetByName(SHEETS.productImages);
+  const rows = sh.getDataRange().getValues();
+  for(let i=rows.length-1; i>=1; i--){
+    if(rows[i][0]===productId) sh.deleteRow(i+1);
+  }
+  (images||[]).forEach((dataUrl, order)=>{
+    if(!dataUrl) return;
+    if(tooBig(dataUrl)) throw new Error('image_too_large');
+    sh.appendRow([productId, order, dataUrl]);
+  });
+}
+
 function createProduct(p){
-  const imagesStr = JSON.stringify(p.images||[]);
-  if(tooBig(imagesStr)) return { ok:false, error:'image_too_large' };
-  appendRow(SHEETS.products, [p.id,p.name,p.categoryId,p.price,p.oldPrice||'',p.stock,p.status,p.desc||'',imagesStr]);
-  return { ok:true };
+  try{
+    appendRow(SHEETS.products, [p.id,p.name,p.categoryId,p.price,p.oldPrice||'',p.stock,p.status,p.desc||'']);
+    replaceProductImages(p.id, p.images);
+    return { ok:true };
+  }catch(err){
+    if(String(err).indexOf('image_too_large')>=0) return { ok:false, error:'image_too_large' };
+    throw err;
+  }
 }
 function updateProduct(p){
-  const imagesStr = JSON.stringify(p.images||[]);
-  if(tooBig(imagesStr)) return { ok:false, error:'image_too_large' };
-  const sh = getSS().getSheetByName(SHEETS.products);
-  const rows = sh.getDataRange().getValues();
-  for(let i=1;i<rows.length;i++){
-    if(rows[i][0]===p.id){
-      sh.getRange(i+1,1,1,9).setValues([[p.id,p.name,p.categoryId,p.price,p.oldPrice||'',p.stock,p.status,p.desc||'',imagesStr]]);
-      break;
+  try{
+    const sh = getSS().getSheetByName(SHEETS.products);
+    const rows = sh.getDataRange().getValues();
+    for(let i=1;i<rows.length;i++){
+      if(rows[i][0]===p.id){
+        sh.getRange(i+1,1,1,8).setValues([[p.id,p.name,p.categoryId,p.price,p.oldPrice||'',p.stock,p.status,p.desc||'']]);
+        break;
+      }
     }
+    replaceProductImages(p.id, p.images);
+    return { ok:true };
+  }catch(err){
+    if(String(err).indexOf('image_too_large')>=0) return { ok:false, error:'image_too_large' };
+    throw err;
   }
-  return { ok:true };
+}
+function deleteProductWithImages(id){
+  deleteRowById(SHEETS.products, id);
+  const sh = getSS().getSheetByName(SHEETS.productImages);
+  const rows = sh.getDataRange().getValues();
+  for(let i=rows.length-1; i>=1; i--){
+    if(rows[i][0]===id) sh.deleteRow(i+1);
+  }
+  return {};
 }
 function createClient(c){
   if(tooBig(c.logo)) return { ok:false, error:'image_too_large' };
