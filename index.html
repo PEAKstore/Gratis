@@ -1515,6 +1515,9 @@ async function syncFromBackend(silent){
     STATE.clients     = r.data.clients     || [];
     STATE.brandLogos  = r.data.brandLogos  || [];
     STATE.isoLogo      = r.data.isoLogo      || null;
+    STATE.heroImage   = r.data.heroImage   || null;
+    STATE.teamPhoto   = r.data.teamPhoto   || null;
+    STATE.heroText    = r.data.heroText    || null;
     saveCache();
     setSyncIndicator(true);
     renderAll();
