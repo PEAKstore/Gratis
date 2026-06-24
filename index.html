@@ -1253,6 +1253,8 @@
 
 const PEAK_CONFIG = {
   spreadsheetId: '1bjvkKJbobuombZBLiSApj4aVzPemnxBwfSChVZ3g7i4',
+  // ✅ URL del backend hardcodeada — todos los dispositivos se conectan automáticamente
+  webAppUrl: 'https://script.google.com/macros/s/AKfycbzV5r2UHUI9UXadpJUtnHuR-f1tJ7C6KVzpXm76vWVix-KnPb-So77E62BNC9UdaQVksA/exec',
   whatsappNumber: '573125456301', // formato internacional sin '+' para wa.me
   adminEmail: 'peakm7358@gmail.com',
   adminPassword: 'Peak2106',
@@ -1354,7 +1356,9 @@ function renderAccountState(){
    nunca se vea vacía mientras conectas el backend.
    ===================================================================== */
 function getWebAppUrl(){
-  return localStorage.getItem(LS_KEYS.webAppUrl) || '';
+  // ✅ Primero usa la URL hardcodeada en PEAK_CONFIG (funciona para TODOS los dispositivos)
+  // El admin puede sobreescribir con localStorage solo si necesita apuntar a otro backend
+  return localStorage.getItem(LS_KEYS.webAppUrl) || PEAK_CONFIG.webAppUrl || '';
 }
 function saveWebAppUrl(){
   const val = document.getElementById('webAppUrlInput').value.trim();
@@ -1482,6 +1486,10 @@ async function syncFromBackend(silent){
     STATE.clients     = r.data.clients     || [];
     STATE.brandLogos  = r.data.brandLogos  || [];
     STATE.isoLogo      = r.data.isoLogo      || null;
+    // ✅ También cargar heroImage y teamPhoto desde el backend
+    STATE.heroImage   = r.data.heroImage   || null;
+    STATE.teamPhoto   = r.data.teamPhoto   || null;
+    STATE.heroText    = r.data.heroText    || null;
     saveCache();
     setSyncIndicator(true);
     renderAll();
@@ -2038,8 +2046,9 @@ document.getElementById('ctaWhatsapp').addEventListener('click', e=>{ e.preventD
 document.getElementById('footWhatsapp').addEventListener('click', e=>{ e.preventDefault(); window.open(genericWhatsappLink(),'_blank'); });
 
 /* =====================================================================
-   IMÁGENES: lectura + compresión a base64 (para guardar en Sheets/celda
-   o enviarlas al backend sin depender de un servidor de archivos)
+   IMÁGENES: lectura + compresión a base64 para enviar al backend
+   El Apps Script sube la imagen a Google Drive y devuelve una URL pública.
+   Así las imágenes son accesibles desde CUALQUIER dispositivo.
    ===================================================================== */
 function readImageAsCompressedDataUrl(file, maxWidth){
   return new Promise((resolve, reject)=>{
@@ -2055,7 +2064,6 @@ function readImageAsCompressedDataUrl(file, maxWidth){
         canvas.width = w; canvas.height = h;
         const ctx = canvas.getContext('2d');
         if(isPng){
-          // Fondo transparente para PNG — NO pintar fondo blanco/negro
           ctx.clearRect(0,0,w,h);
           ctx.drawImage(img,0,0,w,h);
           resolve(canvas.toDataURL('image/png'));
@@ -2070,6 +2078,23 @@ function readImageAsCompressedDataUrl(file, maxWidth){
     reader.onerror = reject;
     reader.readAsDataURL(file);
   });
+}
+
+/**
+ * ✅ NUEVA FUNCIÓN: sube la imagen al backend (Apps Script → Google Drive)
+ * y devuelve la URL pública permanente. Si falla, devuelve el dataUrl local
+ * como fallback para que el admin vea la imagen igual.
+ */
+async function uploadImageToBackend(dataUrl, filename){
+  try{
+    const r = await apiCall('uploadImage', { dataUrl, filename: filename || ('img_' + Date.now()) });
+    if(r && r.ok && r.url){
+      return r.url; // URL pública de Google Drive — visible desde cualquier dispositivo
+    }
+  }catch(e){
+    console.warn('uploadImageToBackend falló, usando dataUrl local', e);
+  }
+  return dataUrl; // fallback: usa base64 local si el backend falla
 }
 
 /* =====================================================================
@@ -2124,9 +2149,15 @@ function populateCategorySelect(){
 document.getElementById('pf_image').addEventListener('change', async (e)=>{
   const file = e.target.files[0];
   if(!file) return;
+  // Mostrar preview inmediato en local mientras sube
   const dataUrl = await readImageAsCompressedDataUrl(file, 1200);
-  STATE.pendingImages.product = dataUrl;
-  document.getElementById('pf_preview').innerHTML = `<div class="ip"><img src="${dataUrl}"><button onclick="STATE.pendingImages.product=null;this.closest('.ip').remove()">×</button></div>`;
+  document.getElementById('pf_preview').innerHTML = `<div class="ip"><img src="${dataUrl}"><span style="font-size:10px;color:var(--grey-mid);display:block;text-align:center;margin-top:4px">Subiendo…</span><button onclick="STATE.pendingImages.product=null;this.closest('.ip').remove()">×</button></div>`;
+  // ✅ Subir a Google Drive y guardar URL pública
+  showToast('Subiendo imagen al servidor…');
+  const url = await uploadImageToBackend(dataUrl, 'product_' + Date.now());
+  STATE.pendingImages.product = url;
+  document.getElementById('pf_preview').innerHTML = `<div class="ip"><img src="${url}"><button onclick="STATE.pendingImages.product=null;this.closest('.ip').remove()">×</button></div>`;
+  if(url.startsWith('http')) showToast('✅ Imagen subida correctamente');
 });
 
 function resetProductForm(){
@@ -2306,28 +2337,34 @@ function renderAdminCategoryTable(){
    ===================================================================== */
 document.getElementById('logo_image').addEventListener('change', async (e)=>{
   const files = Array.from(e.target.files);
+  showToast('Subiendo logo(s) al servidor…');
   for(const file of files){
     const dataUrl = await readImageAsCompressedDataUrl(file, 1600);
-    STATE.brandLogos.push(dataUrl);
+    // ✅ Subir a Drive, guardar URL pública
+    const url = await uploadImageToBackend(dataUrl, 'logo_' + Date.now());
+    STATE.brandLogos.push(url);
   }
   saveCache();
   await apiCall('saveBrandLogos', { brandLogos: STATE.brandLogos });
   renderAdminLogoPreviews();
   renderLogoStage();
   renderHeaderBrand();
-  showToast('Logo(s) agregados — ya rotan en "Nosotros"');
+  showToast('✅ Logo(s) guardados — ya rotan en "Nosotros"');
   e.target.value = '';
 });
 document.getElementById('iso_image').addEventListener('change', async (e)=>{
   const file = e.target.files[0];
   if(!file) return;
+  showToast('Subiendo isologo al servidor…');
   const dataUrl = await readImageAsCompressedDataUrl(file, 1000);
-  STATE.isoLogo = dataUrl;
+  // ✅ Subir a Drive, guardar URL pública
+  const url = await uploadImageToBackend(dataUrl, 'isologo_' + Date.now());
+  STATE.isoLogo = url;
   saveCache();
-  await apiCall('saveIsoLogo', { isoLogo: dataUrl });
+  await apiCall('saveIsoLogo', { isoLogo: url });
   renderAdminLogoPreviews();
   renderHeaderBrand();
-  showToast('Isologo actualizado');
+  showToast('✅ Isologo actualizado');
   e.target.value = '';
 });
 
@@ -2392,13 +2429,17 @@ function resetHeroText(){
 document.getElementById('hero_image').addEventListener('change', async (e)=>{
   const file = e.target.files[0];
   if(!file) return;
+  showToast('Subiendo imagen de portada…');
   const dataUrl = await readImageAsCompressedDataUrl(file, 1400);
-  STATE.heroImage = dataUrl;
-  STATE.pendingImages.hero = dataUrl;
+  // ✅ Subir a Drive, guardar URL pública
+  const url = await uploadImageToBackend(dataUrl, 'hero_' + Date.now());
+  STATE.heroImage = url;
+  STATE.pendingImages.hero = url;
   saveCache();
-  document.getElementById('hero_preview').innerHTML = `<div class="ip"><img src="${dataUrl}"><button onclick="removeHeroImage()">×</button></div>`;
+  await apiCall('saveHeroImage', { heroImage: url });
+  document.getElementById('hero_preview').innerHTML = `<div class="ip"><img src="${url}"><button onclick="removeHeroImage()">×</button></div>`;
   renderHeroContent();
-  showToast('Imagen del hero actualizada');
+  showToast('✅ Imagen del hero actualizada');
   e.target.value = '';
 });
 
@@ -2414,13 +2455,16 @@ function removeHeroImage(){
 document.getElementById('team_image').addEventListener('change', async (e)=>{
   const file = e.target.files[0];
   if(!file) return;
+  showToast('Subiendo foto del equipo…');
   const dataUrl = await readImageAsCompressedDataUrl(file, 800);
-  STATE.teamPhoto = dataUrl;
-  STATE.pendingImages.team = dataUrl;
+  const url = await uploadImageToBackend(dataUrl, 'team_' + Date.now());
+  STATE.teamPhoto = url;
+  STATE.pendingImages.team = url;
   saveCache();
-  document.getElementById('team_preview').innerHTML = `<div class="ip" style="width:88px;height:104px;"><img src="${dataUrl}" style="width:100%;height:100%;object-fit:cover;"></div>`;
+  await apiCall('saveTeamPhoto', { teamPhoto: url });
+  document.getElementById('team_preview').innerHTML = `<div class="ip" style="width:88px;height:104px;"><img src="${url}" style="width:100%;height:100%;object-fit:cover;"><button onclick="removeTeamPhoto()" style="position:absolute;top:2px;right:2px;background:var(--ink);color:var(--paper);width:18px;height:18px;font-size:11px;display:flex;align-items:center;justify-content:center;">×</button></div>`;
   renderTeamPhoto();
-  showToast('Foto del equipo actualizada en Nosotros');
+  showToast('✅ Foto del equipo actualizada en Nosotros');
   e.target.value = '';
 });
 
@@ -2439,9 +2483,13 @@ function removeTeamPhoto(){
 document.getElementById('client_image').addEventListener('change', async (e)=>{
   const file = e.target.files[0];
   if(!file) return;
+  showToast('Subiendo logo del cliente…');
   const dataUrl = await readImageAsCompressedDataUrl(file, 800);
-  STATE.pendingImages.client = dataUrl;
-  document.getElementById('client_preview').innerHTML = `<div class="ip"><img src="${dataUrl}"></div>`;
+  // ✅ Subir a Drive, guardar URL pública
+  const url = await uploadImageToBackend(dataUrl, 'client_' + Date.now());
+  STATE.pendingImages.client = url;
+  document.getElementById('client_preview').innerHTML = `<div class="ip"><img src="${url}"></div>`;
+  showToast('✅ Logo listo para guardar');
 });
 async function saveClientLogo(){
   const name = document.getElementById('clf_name').value.trim();
