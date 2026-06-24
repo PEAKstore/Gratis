@@ -1218,10 +1218,17 @@
           <div class="config-row">
             <span>URL del Web App (Apps Script)</span>
             <div style="display:flex;align-items:center;flex:1;justify-content:flex-end">
-              <input type="text" id="webAppUrlInput" placeholder="Pega aquí tu URL de implementación (…/exec)" style="flex:1;max-width:420px;padding:10px 12px;border:1px solid var(--line-strong);font-size:12px;margin-right:10px">
-              <button class="copy-btn" onclick="saveWebAppUrl()">Guardar</button>
+              <input type="text" id="webAppUrlInput" placeholder="…/exec" style="flex:1;max-width:420px;padding:10px 12px;border:1px solid var(--line-strong);font-size:12px;margin-right:10px">
+              <button class="copy-btn" onclick="saveWebAppUrl()" style="margin-right:6px">Guardar</button>
+              <button class="copy-btn" onclick="clearWebAppUrlOverride()">Usar la fija</button>
             </div>
           </div>
+          <p class="hint" style="margin-top:8px">
+            Esta URL ya viene fijada en el código (PEAK_CONFIG.webAppUrl) — por eso TODOS los visitantes,
+            en cualquier dispositivo, se conectan al mismo Sheet sin configurar nada. Solo cámbiala aquí si
+            quieres probar una implementación nueva en este navegador; para que el cambio aplique a todos,
+            actualiza el valor dentro de PEAK_CONFIG en el código y vuelve a publicar el archivo.
+          </p>
           <div class="config-row">
             <span>Estado de la conexión</span>
             <span class="sync-dot" id="connSyncDot"><span class="d"></span><span id="connSyncTxt">Sin probar</span></span>
@@ -1257,6 +1264,10 @@ const PEAK_CONFIG = {
   adminEmail: 'peakm7358@gmail.com',
   adminPassword: 'Peak2106',
   syncIntervalMs: 25000, // refresco "tiempo real" del catálogo
+  // ✅ URL FIJA del backend (Apps Script /exec). Va incrustada en el código
+  // para que TODOS los visitantes —en cualquier dispositivo, sin configurar
+  // nada— se conecten automáticamente al mismo Google Sheet.
+  webAppUrl: 'https://script.google.com/macros/s/AKfycbwWNBck6KxogdFlUS-cFDNK-B4HtGm8d39XRZspI5csrapP31BAByqU1i3_D8tL9qdiYg/exec',
 };
 
 const LS_KEYS = {
@@ -1352,15 +1363,26 @@ function renderAccountState(){
    Si aún no se ha configurado la URL, la tienda funciona con datos de
    demostración + lo que el admin suba (guardado localmente) para que
    nunca se vea vacía mientras conectas el backend.
+
+   ✅ La URL FIJA (PEAK_CONFIG.webAppUrl) es la que usan TODOS los
+   visitantes por defecto, en cualquier dispositivo. El campo del panel
+   admin solo sirve para anularla temporalmente en este navegador (por
+   ejemplo, para probar una implementación nueva antes de fijarla aquí).
    ===================================================================== */
 function getWebAppUrl(){
-  return localStorage.getItem(LS_KEYS.webAppUrl) || '';
+  return localStorage.getItem(LS_KEYS.webAppUrl) || PEAK_CONFIG.webAppUrl || '';
+}
+function clearWebAppUrlOverride(){
+  localStorage.removeItem(LS_KEYS.webAppUrl);
+  document.getElementById('webAppUrlInput').value = getWebAppUrl();
+  showToast('Usando la URL fija del código. Probando conexión…');
+  testConnection();
 }
 function saveWebAppUrl(){
   const val = document.getElementById('webAppUrlInput').value.trim();
   if(!val){ showToast('Pega primero la URL de tu Web App', true); return; }
   localStorage.setItem(LS_KEYS.webAppUrl, val);
-  showToast('URL guardada. Probando conexión…');
+  showToast('URL guardada (solo en este navegador). Probando conexión…');
   testConnection();
 }
 
