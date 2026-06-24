@@ -1253,8 +1253,6 @@
 
 const PEAK_CONFIG = {
   spreadsheetId: '1bjvkKJbobuombZBLiSApj4aVzPemnxBwfSChVZ3g7i4',
-  // ✅ URL del backend hardcodeada — todos los dispositivos se conectan automáticamente
-  webAppUrl: 'https://script.google.com/macros/s/AKfycbzV5r2UHUI9UXadpJUtnHuR-f1tJ7C6KVzpXm76vWVix-KnPb-So77E62BNC9UdaQVksA/exec',
   whatsappNumber: '573125456301', // formato internacional sin '+' para wa.me
   adminEmail: 'peakm7358@gmail.com',
   adminPassword: 'Peak2106',
@@ -1356,9 +1354,7 @@ function renderAccountState(){
    nunca se vea vacía mientras conectas el backend.
    ===================================================================== */
 function getWebAppUrl(){
-  // ✅ Primero usa la URL hardcodeada en PEAK_CONFIG (funciona para TODOS los dispositivos)
-  // El admin puede sobreescribir con localStorage solo si necesita apuntar a otro backend
-  return localStorage.getItem(LS_KEYS.webAppUrl) || PEAK_CONFIG.webAppUrl || '';
+  return localStorage.getItem(LS_KEYS.webAppUrl) || '';
 }
 function saveWebAppUrl(){
   const val = document.getElementById('webAppUrlInput').value.trim();
@@ -1385,6 +1381,13 @@ async function apiCall(action, payload){
     console.warn('apiCall error', action, err);
     return { ok:false, offline:true, error:String(err) };
   }
+}
+
+function friendlyError(res){
+  const code = res && res.error;
+  if(code === 'image_too_large') return 'la imagen sigue siendo muy pesada para guardarse en la celda de Sheets';
+  if(code === 'no_url' || (res && res.offline)) return 'sin conexión con el backend';
+  return code || 'error desconocido';
 }
 
 function setSyncIndicator(ok, customTxt){
@@ -1438,7 +1441,11 @@ function loadCache(){
       STATE.products = c.products || [];
       STATE.categories = c.categories || [];
       STATE.clients = c.clients || [];
-      STATE.brandLogos = c.brandLogos || [];
+      // Compatibilidad: si el caché viejo tenía brandLogos como array de strings,
+      // lo normalizamos al nuevo formato {key,url} para que no se rompa el render.
+      STATE.brandLogos = (c.brandLogos || []).map(item =>
+        typeof item === 'string' ? { key: null, url: item } : item
+      );
       STATE.isoLogo = c.isoLogo || null;
       STATE.heroText = c.heroText || null;
       STATE.heroImage = c.heroImage || null;
@@ -1486,10 +1493,6 @@ async function syncFromBackend(silent){
     STATE.clients     = r.data.clients     || [];
     STATE.brandLogos  = r.data.brandLogos  || [];
     STATE.isoLogo      = r.data.isoLogo      || null;
-    // ✅ También cargar heroImage y teamPhoto desde el backend
-    STATE.heroImage   = r.data.heroImage   || null;
-    STATE.teamPhoto   = r.data.teamPhoto   || null;
-    STATE.heroText    = r.data.heroText    || null;
     saveCache();
     setSyncIndicator(true);
     renderAll();
@@ -1527,7 +1530,7 @@ function renderAll(){
 function renderHeaderBrand(){
   const img = document.getElementById('brandLogoImg');
   const text = document.getElementById('brandText');
-  const src = STATE.isoLogo || (STATE.brandLogos && STATE.brandLogos[0]) || '';
+  const src = STATE.isoLogo || (STATE.brandLogos && STATE.brandLogos[0] && STATE.brandLogos[0].url) || '';
   if(src){
     img.src = src;
     img.style.display = 'block';
@@ -1673,7 +1676,7 @@ function renderLogoStage(){
     return;
   }
   stage.classList.remove('empty');
-  stage.innerHTML = logos.map((src,i)=>`<img src="${src}" class="${i===0?'show':''}" data-i="${i}">`).join('') +
+  stage.innerHTML = logos.map((item,i)=>`<img src="${item.url}" class="${i===0?'show':''}" data-i="${i}">`).join('') +
     (logos.length>1 ? `<div class="lp">${logos.map((_,i)=>`<span class="${i===0?'on':''}"></span>`).join('')}</div>` : '');
 
   if(logoRotateTimer) clearInterval(logoRotateTimer);
@@ -2046,32 +2049,22 @@ document.getElementById('ctaWhatsapp').addEventListener('click', e=>{ e.preventD
 document.getElementById('footWhatsapp').addEventListener('click', e=>{ e.preventDefault(); window.open(genericWhatsappLink(),'_blank'); });
 
 /* =====================================================================
-   IMÁGENES: lectura + compresión a base64 para enviar al backend
-   El Apps Script sube la imagen a Google Drive y devuelve una URL pública.
-   Así las imágenes son accesibles desde CUALQUIER dispositivo.
+   IMÁGENES: lectura + compresión "inteligente" a base64.
+   Google Sheets tiene un límite REAL de 50.000 caracteres por celda.
+   Si el base64 lo supera, Sheets lo TRUNCA en silencio y la imagen queda
+   corrupta para todo el mundo (eso es lo que causaba "carga pero no se
+   ve" — no era un problema de permisos, sino de tamaño de celda).
+   Por eso comprimimos en un bucle: si el resultado sigue pesando más de
+   MAX_CELL_CHARS, bajamos calidad y/o tamaño hasta que quepa con margen.
    ===================================================================== */
-function readImageAsCompressedDataUrl(file, maxWidth){
+const MAX_CELL_CHARS = 44000; // margen de seguridad bajo el límite real de 50.000
+
+function loadImageElement(file){
   return new Promise((resolve, reject)=>{
-    const isPng = file.type === 'image/png';
     const reader = new FileReader();
     reader.onload = ()=>{
       const img = new Image();
-      img.onload = ()=>{
-        const scale = Math.min(1, (maxWidth||1400)/img.width);
-        const w = Math.round(img.width*scale);
-        const h = Math.round(img.height*scale);
-        const canvas = document.createElement('canvas');
-        canvas.width = w; canvas.height = h;
-        const ctx = canvas.getContext('2d');
-        if(isPng){
-          ctx.clearRect(0,0,w,h);
-          ctx.drawImage(img,0,0,w,h);
-          resolve(canvas.toDataURL('image/png'));
-        } else {
-          ctx.drawImage(img,0,0,w,h);
-          resolve(canvas.toDataURL('image/jpeg', 0.82));
-        }
-      };
+      img.onload = ()=>resolve(img);
       img.onerror = reject;
       img.src = reader.result;
     };
@@ -2080,21 +2073,45 @@ function readImageAsCompressedDataUrl(file, maxWidth){
   });
 }
 
-/**
- * ✅ NUEVA FUNCIÓN: sube la imagen al backend (Apps Script → Google Drive)
- * y devuelve la URL pública permanente. Si falla, devuelve el dataUrl local
- * como fallback para que el admin vea la imagen igual.
- */
-async function uploadImageToBackend(dataUrl, filename){
-  try{
-    const r = await apiCall('uploadImage', { dataUrl, filename: filename || ('img_' + Date.now()) });
-    if(r && r.ok && r.url){
-      return r.url; // URL pública de Google Drive — visible desde cualquier dispositivo
+async function readImageAsCompressedDataUrl(file, maxWidth){
+  const isPng = file.type === 'image/png';
+  const img = await loadImageElement(file);
+
+  let width = Math.min(maxWidth||1400, img.width);
+  let quality = 0.82;
+  let dataUrl = '';
+
+  for(let attempt=0; attempt<12; attempt++){
+    const scale = width / img.width;
+    const w = Math.max(60, Math.round(img.width*scale));
+    const h = Math.max(60, Math.round(img.height*scale));
+    const canvas = document.createElement('canvas');
+    canvas.width = w; canvas.height = h;
+    const ctx = canvas.getContext('2d');
+    if(isPng){
+      ctx.clearRect(0,0,w,h);
+      ctx.drawImage(img,0,0,w,h);
+      dataUrl = canvas.toDataURL('image/png');
+    } else {
+      ctx.drawImage(img,0,0,w,h);
+      dataUrl = canvas.toDataURL('image/jpeg', quality);
     }
-  }catch(e){
-    console.warn('uploadImageToBackend falló, usando dataUrl local', e);
+
+    if(dataUrl.length <= MAX_CELL_CHARS) return dataUrl;
+
+    // Aún muy pesada: primero bajamos calidad (solo afecta JPEG), luego tamaño.
+    if(!isPng && quality > 0.4){
+      quality -= 0.12;
+    } else {
+      width = Math.round(width*0.8);
+    }
+    if(width < 150) break;
   }
-  return dataUrl; // fallback: usa base64 local si el backend falla
+
+  if(dataUrl.length > MAX_CELL_CHARS){
+    showToast('Esa imagen sigue muy pesada incluso comprimida. Usa una foto más simple o de menor resolución.', true);
+  }
+  return dataUrl;
 }
 
 /* =====================================================================
@@ -2149,15 +2166,9 @@ function populateCategorySelect(){
 document.getElementById('pf_image').addEventListener('change', async (e)=>{
   const file = e.target.files[0];
   if(!file) return;
-  // Mostrar preview inmediato en local mientras sube
   const dataUrl = await readImageAsCompressedDataUrl(file, 1200);
-  document.getElementById('pf_preview').innerHTML = `<div class="ip"><img src="${dataUrl}"><span style="font-size:10px;color:var(--grey-mid);display:block;text-align:center;margin-top:4px">Subiendo…</span><button onclick="STATE.pendingImages.product=null;this.closest('.ip').remove()">×</button></div>`;
-  // ✅ Subir a Google Drive y guardar URL pública
-  showToast('Subiendo imagen al servidor…');
-  const url = await uploadImageToBackend(dataUrl, 'product_' + Date.now());
-  STATE.pendingImages.product = url;
-  document.getElementById('pf_preview').innerHTML = `<div class="ip"><img src="${url}"><button onclick="STATE.pendingImages.product=null;this.closest('.ip').remove()">×</button></div>`;
-  if(url.startsWith('http')) showToast('✅ Imagen subida correctamente');
+  STATE.pendingImages.product = dataUrl;
+  document.getElementById('pf_preview').innerHTML = `<div class="ip"><img src="${dataUrl}"><button onclick="STATE.pendingImages.product=null;this.closest('.ip').remove()">×</button></div>`;
 });
 
 function resetProductForm(){
@@ -2215,14 +2226,22 @@ async function saveProduct(){
   const productPayload = { name, categoryId, price, oldPrice, stock, status, desc, images };
 
   if(STATE.editingProductId){
+    const res = await apiCall('updateProduct', { id: STATE.editingProductId, ...productPayload });
+    if(!res || !res.ok){
+      showToast('No se pudo guardar el producto (' + friendlyError(res) + ')', true);
+      return;
+    }
     const idx = STATE.products.findIndex(p=>p.id===STATE.editingProductId);
     STATE.products[idx] = { ...STATE.products[idx], ...productPayload };
-    await apiCall('updateProduct', { id: STATE.editingProductId, ...productPayload });
     showToast('Producto actualizado');
   }else{
     const newProduct = { id: uid('prod'), ...productPayload };
+    const res = await apiCall('createProduct', newProduct);
+    if(!res || !res.ok){
+      showToast('No se pudo publicar el producto (' + friendlyError(res) + ')', true);
+      return;
+    }
     STATE.products.push(newProduct);
-    await apiCall('createProduct', newProduct);
     showToast('Producto publicado en la tienda');
   }
 
@@ -2337,41 +2356,47 @@ function renderAdminCategoryTable(){
    ===================================================================== */
 document.getElementById('logo_image').addEventListener('change', async (e)=>{
   const files = Array.from(e.target.files);
-  showToast('Subiendo logo(s) al servidor…');
+  let okCount = 0;
   for(const file of files){
     const dataUrl = await readImageAsCompressedDataUrl(file, 1600);
-    // ✅ Subir a Drive, guardar URL pública
-    const url = await uploadImageToBackend(dataUrl, 'logo_' + Date.now());
-    STATE.brandLogos.push(url);
+    const res = await apiCall('addBrandLogo', { dataUrl });
+    if(res && res.ok){
+      // Cada logo vive en su propia fila (key) — así nunca compiten por espacio entre sí
+      STATE.brandLogos.push({ key: res.key, url: dataUrl });
+      okCount++;
+    } else {
+      showToast('No se pudo guardar uno de los logos (' + friendlyError(res) + ')', true);
+    }
   }
   saveCache();
-  await apiCall('saveBrandLogos', { brandLogos: STATE.brandLogos });
   renderAdminLogoPreviews();
   renderLogoStage();
   renderHeaderBrand();
-  showToast('✅ Logo(s) guardados — ya rotan en "Nosotros"');
+  if(okCount) showToast('Logo(s) agregados — ya rotan en "Nosotros"');
   e.target.value = '';
 });
 document.getElementById('iso_image').addEventListener('change', async (e)=>{
   const file = e.target.files[0];
   if(!file) return;
-  showToast('Subiendo isologo al servidor…');
   const dataUrl = await readImageAsCompressedDataUrl(file, 1000);
-  // ✅ Subir a Drive, guardar URL pública
-  const url = await uploadImageToBackend(dataUrl, 'isologo_' + Date.now());
-  STATE.isoLogo = url;
-  saveCache();
-  await apiCall('saveIsoLogo', { isoLogo: url });
-  renderAdminLogoPreviews();
-  renderHeaderBrand();
-  showToast('✅ Isologo actualizado');
+  const res = await apiCall('saveIsoLogo', { isoLogo: dataUrl });
+  if(res && res.ok){
+    STATE.isoLogo = dataUrl;
+    saveCache();
+    renderAdminLogoPreviews();
+    renderHeaderBrand();
+    showToast('Isologo actualizado');
+  } else {
+    showToast('No se pudo guardar el isologo (' + friendlyError(res) + ')', true);
+  }
   e.target.value = '';
 });
 
 async function removeBrandLogo(idx){
+  const item = STATE.brandLogos[idx];
   STATE.brandLogos.splice(idx,1);
   saveCache();
-  await apiCall('saveBrandLogos', { brandLogos: STATE.brandLogos });
+  if(item && item.key) await apiCall('deleteBrandLogo', { key: item.key });
   renderAdminLogoPreviews();
   renderLogoStage();
   renderHeaderBrand();
@@ -2386,7 +2411,7 @@ async function removeIsoLogo(){
 
 function renderAdminLogoPreviews(){
   const logoWrap = document.getElementById('logo_preview');
-  logoWrap.innerHTML = (STATE.brandLogos||[]).map((src,i)=>`<div class="ip"><img src="${src}"><button onclick="removeBrandLogo(${i})">×</button></div>`).join('');
+  logoWrap.innerHTML = (STATE.brandLogos||[]).map((item,i)=>`<div class="ip"><img src="${item.url}"><button onclick="removeBrandLogo(${i})">×</button></div>`).join('');
   const isoWrap = document.getElementById('iso_preview');
   isoWrap.innerHTML = STATE.isoLogo ? `<div class="ip"><img src="${STATE.isoLogo}"><button onclick="removeIsoLogo()">×</button></div>` : '';
 }
@@ -2429,17 +2454,18 @@ function resetHeroText(){
 document.getElementById('hero_image').addEventListener('change', async (e)=>{
   const file = e.target.files[0];
   if(!file) return;
-  showToast('Subiendo imagen de portada…');
   const dataUrl = await readImageAsCompressedDataUrl(file, 1400);
-  // ✅ Subir a Drive, guardar URL pública
-  const url = await uploadImageToBackend(dataUrl, 'hero_' + Date.now());
-  STATE.heroImage = url;
-  STATE.pendingImages.hero = url;
-  saveCache();
-  await apiCall('saveHeroImage', { heroImage: url });
-  document.getElementById('hero_preview').innerHTML = `<div class="ip"><img src="${url}"><button onclick="removeHeroImage()">×</button></div>`;
-  renderHeroContent();
-  showToast('✅ Imagen del hero actualizada');
+  const res = await apiCall('saveHeroImage', { heroImage: dataUrl });
+  if(res && res.ok){
+    STATE.heroImage = dataUrl;
+    STATE.pendingImages.hero = dataUrl;
+    saveCache();
+    document.getElementById('hero_preview').innerHTML = `<div class="ip"><img src="${dataUrl}"><button onclick="removeHeroImage()">×</button></div>`;
+    renderHeroContent();
+    showToast('Imagen del hero actualizada');
+  } else {
+    showToast('No se pudo guardar la imagen del hero (' + friendlyError(res) + ')', true);
+  }
   e.target.value = '';
 });
 
@@ -2455,16 +2481,18 @@ function removeHeroImage(){
 document.getElementById('team_image').addEventListener('change', async (e)=>{
   const file = e.target.files[0];
   if(!file) return;
-  showToast('Subiendo foto del equipo…');
   const dataUrl = await readImageAsCompressedDataUrl(file, 800);
-  const url = await uploadImageToBackend(dataUrl, 'team_' + Date.now());
-  STATE.teamPhoto = url;
-  STATE.pendingImages.team = url;
-  saveCache();
-  await apiCall('saveTeamPhoto', { teamPhoto: url });
-  document.getElementById('team_preview').innerHTML = `<div class="ip" style="width:88px;height:104px;"><img src="${url}" style="width:100%;height:100%;object-fit:cover;"><button onclick="removeTeamPhoto()" style="position:absolute;top:2px;right:2px;background:var(--ink);color:var(--paper);width:18px;height:18px;font-size:11px;display:flex;align-items:center;justify-content:center;">×</button></div>`;
-  renderTeamPhoto();
-  showToast('✅ Foto del equipo actualizada en Nosotros');
+  const res = await apiCall('saveTeamPhoto', { teamPhoto: dataUrl });
+  if(res && res.ok){
+    STATE.teamPhoto = dataUrl;
+    STATE.pendingImages.team = dataUrl;
+    saveCache();
+    document.getElementById('team_preview').innerHTML = `<div class="ip" style="width:88px;height:104px;"><img src="${dataUrl}" style="width:100%;height:100%;object-fit:cover;"></div>`;
+    renderTeamPhoto();
+    showToast('Foto del equipo actualizada en Nosotros');
+  } else {
+    showToast('No se pudo guardar la foto del equipo (' + friendlyError(res) + ')', true);
+  }
   e.target.value = '';
 });
 
@@ -2483,21 +2511,21 @@ function removeTeamPhoto(){
 document.getElementById('client_image').addEventListener('change', async (e)=>{
   const file = e.target.files[0];
   if(!file) return;
-  showToast('Subiendo logo del cliente…');
   const dataUrl = await readImageAsCompressedDataUrl(file, 800);
-  // ✅ Subir a Drive, guardar URL pública
-  const url = await uploadImageToBackend(dataUrl, 'client_' + Date.now());
-  STATE.pendingImages.client = url;
-  document.getElementById('client_preview').innerHTML = `<div class="ip"><img src="${url}"></div>`;
-  showToast('✅ Logo listo para guardar');
+  STATE.pendingImages.client = dataUrl;
+  document.getElementById('client_preview').innerHTML = `<div class="ip"><img src="${dataUrl}"></div>`;
 });
 async function saveClientLogo(){
   const name = document.getElementById('clf_name').value.trim();
   if(!name || !STATE.pendingImages.client){ showToast('Agrega nombre y logo del cliente', true); return; }
   const client = { id: uid('client'), name, logo: STATE.pendingImages.client };
+  const res = await apiCall('createClient', client);
+  if(!res || !res.ok){
+    showToast('No se pudo guardar el cliente (' + friendlyError(res) + ')', true);
+    return;
+  }
   STATE.clients.push(client);
   saveCache();
-  await apiCall('createClient', client);
   document.getElementById('clf_name').value='';
   document.getElementById('client_preview').innerHTML='';
   document.getElementById('client_image').value='';
@@ -2557,6 +2585,9 @@ function downloadAppsScript(){
   const code = `/**
  * PEAK store — Backend de Google Apps Script
  * Spreadsheet conectado: ${PEAK_CONFIG.spreadsheetId}
+ * Las imágenes se guardan en base64 directamente en el Spreadsheet
+ * (sin Drive ni ningún servicio externo), con control de tamaño por
+ * celda para que nunca se corrompan ni queden invisibles para nadie.
  *
  * INSTALACIÓN:
  * 1. Abre tu Google Sheet (ID: ${PEAK_CONFIG.spreadsheetId}).
@@ -2570,6 +2601,11 @@ function downloadAppsScript(){
  */
 
 const SPREADSHEET_ID = '${PEAK_CONFIG.spreadsheetId}';
+
+// Límite real de Google Sheets: 50.000 caracteres por celda.
+// Si se supera, Sheets trunca el valor en silencio y la imagen queda
+// corrupta para todos. Dejamos margen y rechazamos antes de que pase.
+const MAX_CELL_CHARS = 49000;
 
 const SHEETS = {
   products: 'Productos',
@@ -2601,8 +2637,28 @@ function ensureSheets(){
   });
 }
 
+// Migra logos de marca viejos (todos juntos en una sola celda) al nuevo
+// esquema de una fila por logo, para que nunca compitan por espacio.
+function migrateLegacyBrandLogos(){
+  const sh = getSS().getSheetByName(SHEETS.brand);
+  const rows = sh.getDataRange().getValues();
+  for(let i=1;i<rows.length;i++){
+    if(rows[i][0]==='brandLogos'){
+      const legacyArray = safeParseArray(rows[i][1]);
+      legacyArray.forEach((url, idx)=>{
+        if(!url) return;
+        const key = 'brandLogo_' + Date.now() + '_' + idx + '_' + Math.floor(Math.random()*10000);
+        sh.appendRow([key, url]);
+      });
+      sh.deleteRow(i+1);
+      break;
+    }
+  }
+}
+
 function doPost(e){
   ensureSheets();
+  migrateLegacyBrandLogos();
   let body;
   try{ body = JSON.parse(e.postData.contents); }catch(err){ return jsonOut({ok:false,error:'bad_request'}); }
   const action = body.action;
@@ -2612,15 +2668,19 @@ function doPost(e){
     switch(action){
       case 'ping': return jsonOut({ok:true, time:new Date().toISOString()});
       case 'getStoreData': return jsonOut({ok:true, data:getStoreData()});
-      case 'createProduct': return jsonOut({ok:true, ...createProduct(payload)});
-      case 'updateProduct': return jsonOut({ok:true, ...updateProduct(payload)});
+      case 'createProduct': return jsonOut(createProduct(payload));
+      case 'updateProduct': return jsonOut(updateProduct(payload));
       case 'deleteProduct': return jsonOut({ok:true, ...deleteRowById(SHEETS.products, payload.id)});
       case 'createCategory': return jsonOut({ok:true, ...appendRow(SHEETS.categories, [payload.id,payload.name,payload.desc||''])});
       case 'deleteCategory': return jsonOut({ok:true, ...deleteRowById(SHEETS.categories, payload.id)});
-      case 'createClient': return jsonOut({ok:true, ...appendRow(SHEETS.clients, [payload.id,payload.name,payload.logo])});
+      case 'createClient': return jsonOut(createClient(payload));
       case 'deleteClient': return jsonOut({ok:true, ...deleteRowById(SHEETS.clients, payload.id)});
-      case 'saveBrandLogos': return jsonOut({ok:true, ...saveBrandKey('brandLogos', JSON.stringify(payload.brandLogos||[]))});
-      case 'saveIsoLogo': return jsonOut({ok:true, ...saveBrandKey('isoLogo', payload.isoLogo||'')});
+      case 'addBrandLogo': return jsonOut(addBrandLogo(payload));
+      case 'deleteBrandLogo': return jsonOut({ok:true, ...deleteRowById(SHEETS.brand, payload.key)});
+      case 'saveIsoLogo': return jsonOut(saveBrandKeyChecked('isoLogo', payload.isoLogo||'', 'Isologo'));
+      case 'saveHeroImage': return jsonOut(saveBrandKeyChecked('heroImage', payload.heroImage||'', 'Imagen del hero'));
+      case 'saveTeamPhoto': return jsonOut(saveBrandKeyChecked('teamPhoto', payload.teamPhoto||'', 'Foto del equipo'));
+      case 'saveHeroText': return jsonOut({ok:true, ...saveBrandKey('heroText', payload.heroText||'')});
       case 'logOrder': return jsonOut({ok:true, ...appendRow(SHEETS.orders, [new Date().toLocaleString(), payload.name, payload.address||'', payload.summary, payload.total])});
       case 'registerUser': return jsonOut({ok:true, ...appendRow(SHEETS.users, [payload.name,payload.email,payload.phone||'',payload.password])});
       case 'loginUser': return jsonOut(loginUser(payload));
@@ -2633,6 +2693,7 @@ function doPost(e){
 
 function doGet(e){
   ensureSheets();
+  migrateLegacyBrandLogos();
   return jsonOut({ok:true, data:getStoreData()});
 }
 
@@ -2663,15 +2724,21 @@ function getStoreData(){
   const categories = sheetToObjects(SHEETS.categories);
   const clients = sheetToObjects(SHEETS.clients);
   const brandRows = sheetToObjects(SHEETS.brand);
-  const brandLogosRow = brandRows.find(r=>r.key==='brandLogos');
-  const isoLogoRow = brandRows.find(r=>r.key==='isoLogo');
+  const get = key => { const row = brandRows.find(r=>r.key===key); return row ? (row.value||null) : null; };
+  const brandLogos = brandRows
+    .filter(r=>String(r.key||'').indexOf('brandLogo_')===0 && r.value)
+    .map(r=>({ key:r.key, url:r.value }));
   return {
-    products, categories, clients,
-    brandLogos: brandLogosRow ? safeParseArray(brandLogosRow.value) : [],
-    isoLogo: isoLogoRow ? (isoLogoRow.value || null) : null,
+    products, categories, clients, brandLogos,
+    isoLogo: get('isoLogo'),
+    heroImage: get('heroImage'),
+    teamPhoto: get('teamPhoto'),
+    heroText: get('heroText'),
   };
 }
 function safeParseArray(v){ try{ const a = JSON.parse(v); return Array.isArray(a)?a:(v?[v]:[]); }catch(e){ return v ? [v] : []; } }
+
+function tooBig(value){ return String(value||'').length > MAX_CELL_CHARS; }
 
 function appendRow(sheetName, rowArray){
   getSS().getSheetByName(sheetName).appendRow(rowArray);
@@ -2679,19 +2746,36 @@ function appendRow(sheetName, rowArray){
 }
 
 function createProduct(p){
-  appendRow(SHEETS.products, [p.id,p.name,p.categoryId,p.price,p.oldPrice||'',p.stock,p.status,p.desc||'',JSON.stringify(p.images||[])]);
-  return {};
+  const imagesStr = JSON.stringify(p.images||[]);
+  if(tooBig(imagesStr)) return { ok:false, error:'image_too_large' };
+  appendRow(SHEETS.products, [p.id,p.name,p.categoryId,p.price,p.oldPrice||'',p.stock,p.status,p.desc||'',imagesStr]);
+  return { ok:true };
 }
 function updateProduct(p){
+  const imagesStr = JSON.stringify(p.images||[]);
+  if(tooBig(imagesStr)) return { ok:false, error:'image_too_large' };
   const sh = getSS().getSheetByName(SHEETS.products);
   const rows = sh.getDataRange().getValues();
   for(let i=1;i<rows.length;i++){
     if(rows[i][0]===p.id){
-      sh.getRange(i+1,1,1,9).setValues([[p.id,p.name,p.categoryId,p.price,p.oldPrice||'',p.stock,p.status,p.desc||'',JSON.stringify(p.images||[])]]);
+      sh.getRange(i+1,1,1,9).setValues([[p.id,p.name,p.categoryId,p.price,p.oldPrice||'',p.stock,p.status,p.desc||'',imagesStr]]);
       break;
     }
   }
-  return {};
+  return { ok:true };
+}
+function createClient(c){
+  if(tooBig(c.logo)) return { ok:false, error:'image_too_large' };
+  appendRow(SHEETS.clients, [c.id, c.name, c.logo]);
+  return { ok:true };
+}
+function addBrandLogo(payload){
+  const dataUrl = payload.dataUrl || '';
+  if(!dataUrl) return { ok:false, error:'empty_image' };
+  if(tooBig(dataUrl)) return { ok:false, error:'image_too_large' };
+  const key = 'brandLogo_' + Date.now() + '_' + Math.floor(Math.random()*10000);
+  appendRow(SHEETS.brand, [key, dataUrl]);
+  return { ok:true, key };
 }
 function deleteRowById(sheetName, id){
   const sh = getSS().getSheetByName(sheetName);
@@ -2709,6 +2793,11 @@ function saveBrandKey(key, value){
   }
   sh.appendRow([key, value]);
   return {};
+}
+function saveBrandKeyChecked(key, value, label){
+  if(tooBig(value)) return { ok:false, error:'image_too_large', label };
+  saveBrandKey(key, value);
+  return { ok:true };
 }
 function loginUser(payload){
   const users = sheetToObjects(SHEETS.users);
