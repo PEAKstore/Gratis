@@ -2663,12 +2663,17 @@ function initPortadaAdmin(){
     : '';
 }
 
-function saveHeroText(){
+async function saveHeroText(){
   const val = document.getElementById('heroTextInput').value.trim();
   STATE.heroText = val || null;
   saveCache();
   renderHeroContent();
-  showToast(val ? 'Frase actualizada en la portada' : 'Frase restaurada al original');
+  const res = await apiCall('saveHeroText', { heroText: val || '' });
+  if(res && res.ok){
+    showToast(val ? 'Frase actualizada en la portada' : 'Frase restaurada al original');
+  } else {
+    showToast('Guardado solo localmente — revisa la conexión con Sheets', true);
+  }
 }
 function resetHeroText(){
   STATE.heroText = null;
