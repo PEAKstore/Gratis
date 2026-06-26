@@ -1,1 +1,885 @@
+/* ================================================================
+   DEVICE/DROP — iPhone Showcase
+   CSS Architecture: tokens → reset → layout → components → states
+   Author: UI Senior / Space Grotesk + Space Mono
+   ================================================================ */
 
+/* ── DESIGN TOKENS ─────────────────────────────────────────────── */
+:root {
+  /* Palette */
+  --bg:          #0a0a0f;
+  --surface:     #101018;
+  --surface-2:   #16161f;
+  --border:      rgba(255,255,255,0.07);
+  --border-soft: rgba(255,255,255,0.04);
+  --text-primary:   #f0f0f5;
+  --text-secondary: #8888a0;
+  --text-tertiary:  #44445a;
+  --accent:      #8b5cf6;       /* violet – signature colour */
+  --accent-glow: rgba(139, 92, 246, 0.3);
+  --accent-2:    #06b6d4;       /* cyan highlight */
+  --red:         #ef4444;
+
+  /* Type */
+  --font-body:    'Space Grotesk', system-ui, sans-serif;
+  --font-mono:    'Space Mono', monospace;
+
+  /* Spacing */
+  --sp-1: 4px;
+  --sp-2: 8px;
+  --sp-3: 12px;
+  --sp-4: 16px;
+  --sp-5: 24px;
+  --sp-6: 32px;
+  --sp-7: 48px;
+  --sp-8: 64px;
+
+  /* Radii */
+  --r-sm:  6px;
+  --r-md:  12px;
+  --r-lg:  20px;
+  --r-pill: 999px;
+
+  /* Phone dimensions */
+  --ph-w:   52px;
+  --ph-h:   90px;
+  --ph-r:   9px;
+  --ph-mini-w: 44px;
+  --ph-mini-h: 76px;
+
+  /* Transition */
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --ease-out:    cubic-bezier(0.16, 1, 0.3, 1);
+  --t-fast:  180ms;
+  --t-mid:   320ms;
+  --t-slow:  500ms;
+}
+
+/* ── RESET & BASE ───────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html {
+  height: 100%;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  min-height: 100vh;
+  background: var(--bg);
+  color: var(--text-primary);
+  font-family: var(--font-body);
+  font-size: 13px;
+  line-height: 1.5;
+  overflow-x: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+button {
+  font-family: inherit;
+  cursor: pointer;
+  border: none;
+  background: none;
+  color: inherit;
+}
+
+/* ── HEADER ─────────────────────────────────────────────────────── */
+.site-header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 100;
+  height: 52px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 var(--sp-5);
+  background: rgba(10,10,15,0.85);
+  backdrop-filter: blur(16px) saturate(180%);
+  -webkit-backdrop-filter: blur(16px) saturate(180%);
+  border-bottom: 1px solid var(--border);
+}
+
+.header-left {
+  display: flex;
+  align-items: baseline;
+  gap: var(--sp-3);
+}
+
+.logo-wordmark {
+  font-family: var(--font-mono);
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: var(--text-primary);
+}
+
+.logo-slash {
+  color: var(--accent);
+}
+
+.logo-est {
+  font-size: 10px;
+  color: var(--text-tertiary);
+  font-family: var(--font-mono);
+  letter-spacing: 0.1em;
+}
+
+.header-nav {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-5);
+}
+
+.header-nav a {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  text-decoration: none;
+  letter-spacing: 0.02em;
+  transition: color var(--t-fast) ease;
+}
+
+.header-nav a:hover { color: var(--text-primary); }
+
+.live-badge {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  font-size: 11px;
+  font-family: var(--font-mono);
+  color: var(--text-secondary);
+  letter-spacing: 0.04em;
+}
+
+.live-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #22c55e;
+  box-shadow: 0 0 0 0 rgba(34,197,94,0.5);
+  animation: pulse-live 2s ease-in-out infinite;
+}
+
+@keyframes pulse-live {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(34,197,94,0.5); }
+  50%       { box-shadow: 0 0 0 5px rgba(34,197,94,0); }
+}
+
+/* ── TICKER ─────────────────────────────────────────────────────── */
+.ticker-wrap {
+  position: fixed;
+  top: 52px;
+  left: 0;
+  right: 0;
+  z-index: 99;
+  height: 30px;
+  overflow: hidden;
+  border-bottom: 1px solid var(--border-soft);
+  background: var(--surface);
+  display: flex;
+  align-items: center;
+}
+
+.ticker-track {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-5);
+  white-space: nowrap;
+  animation: ticker-scroll 40s linear infinite;
+  font-size: 10px;
+  font-family: var(--font-mono);
+  color: var(--text-tertiary);
+  letter-spacing: 0.06em;
+}
+
+.ticker-track span { flex-shrink: 0; }
+.ticker-sep { color: var(--accent); font-size: 8px; }
+
+@keyframes ticker-scroll {
+  0%   { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+/* ── STAGE ──────────────────────────────────────────────────────── */
+.stage {
+  flex: 1;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 110px var(--sp-5) 110px;
+  overflow: hidden;
+  min-height: 100vh;
+}
+
+/* Ambient glow blobs */
+.ambient-glow {
+  position: absolute;
+  pointer-events: none;
+  border-radius: 50%;
+  filter: blur(80px);
+  opacity: 0.12;
+  animation: glow-drift 12s ease-in-out infinite alternate;
+}
+
+.glow-a {
+  width: 500px; height: 500px;
+  background: var(--accent);
+  top: -100px; left: -80px;
+  animation-duration: 14s;
+}
+
+.glow-b {
+  width: 400px; height: 400px;
+  background: var(--accent-2);
+  bottom: 50px; right: -60px;
+  animation-duration: 10s;
+  animation-delay: -4s;
+}
+
+.glow-c {
+  width: 300px; height: 300px;
+  background: #f59e0b;
+  top: 40%; left: 50%;
+  transform: translate(-50%,-50%);
+  opacity: 0.06;
+  animation-duration: 18s;
+  animation-delay: -8s;
+}
+
+@keyframes glow-drift {
+  0%   { transform: translate(0,0) scale(1); }
+  100% { transform: translate(40px, 30px) scale(1.15); }
+}
+
+.glow-c { animation-name: glow-drift-c; }
+@keyframes glow-drift-c {
+  0%   { transform: translate(-50%,-50%) scale(1); }
+  100% { transform: translate(calc(-50% + 30px), calc(-50% - 20px)) scale(1.2); }
+}
+
+/* Grid label */
+.grid-label {
+  position: absolute;
+  top: 94px;
+  right: var(--sp-5);
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+  z-index: 10;
+}
+
+.grid-label-num {
+  font-family: var(--font-mono);
+  font-size: 28px;
+  font-weight: 700;
+  line-height: 1;
+  color: var(--text-primary);
+}
+
+.grid-label-txt {
+  font-size: 10px;
+  color: var(--text-tertiary);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+/* ── PHONE CLOUD LAYOUT ─────────────────────────────────────────── */
+.phone-cloud {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--sp-2);
+  position: relative;
+  z-index: 2;
+}
+
+.cloud-row {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  gap: var(--sp-2);
+}
+
+/* Row width classes create the oval/egg cloud shape */
+.row-xs  { max-width: 280px; width: 100%; }
+.row-sm  { max-width: 380px; width: 100%; }
+.row-md  { max-width: 480px; width: 100%; }
+.row-lg  { max-width: 570px; width: 100%; }
+.row-xl  { max-width: 660px; width: 100%; }
+
+/* ── PHONE ITEM ─────────────────────────────────────────────────── */
+.phone-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  flex-shrink: 0;
+  /* Stagger entrance animation via inline style (set in JS) */
+}
+
+.phone-btn {
+  padding: 0;
+  display: flex;
+  outline-offset: 3px;
+  border-radius: var(--ph-r);
+  transition: transform var(--t-mid) var(--ease-spring),
+              filter var(--t-mid) ease;
+  will-change: transform, filter;
+}
+
+.phone-btn:focus-visible {
+  outline: 2px solid var(--accent);
+}
+
+.phone-btn:hover {
+  transform: translateY(-10px) scale(1.12) rotate(-2deg);
+  filter: drop-shadow(0 16px 28px rgba(0,0,0,0.5))
+          drop-shadow(0 4px 12px var(--accent-glow));
+  z-index: 20;
+}
+
+.phone-btn:active {
+  transform: translateY(-6px) scale(1.06);
+  transition-duration: 80ms;
+}
+
+.phone-label {
+  font-size: 9px;
+  font-family: var(--font-mono);
+  color: var(--text-tertiary);
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+  opacity: 0;
+  transform: translateY(4px);
+  transition: opacity var(--t-fast) ease, transform var(--t-fast) ease;
+  pointer-events: none;
+}
+
+.phone-item:hover .phone-label {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* ── PHONE SHELL (CSS-drawn iPhones) ───────────────────────────── */
+.phone-shell {
+  position: relative;
+  width: var(--ph-w);
+  height: var(--ph-h);
+  border-radius: var(--ph-r);
+  overflow: hidden;
+  display: flex;
+  align-items: stretch;
+  box-shadow:
+    inset 0 0 0 1px rgba(255,255,255,0.18),
+    inset 0 2px 4px rgba(255,255,255,0.12),
+    0 4px 12px rgba(0,0,0,0.45),
+    0 1px 2px rgba(0,0,0,0.6);
+}
+
+/* Mini variant */
+.ph-mini {
+  width: var(--ph-mini-w);
+  height: var(--ph-mini-h);
+}
+
+/* Side action button */
+.phone-side-btn {
+  position: absolute;
+  right: -2px;
+  top: 22px;
+  width: 3px;
+  height: 12px;
+  border-radius: 2px 0 0 2px;
+  background: inherit;
+  filter: brightness(0.8);
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,0.12);
+}
+
+/* Volume buttons */
+.phone-vol-btns {
+  position: absolute;
+  left: -2px;
+  top: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.phone-vol-btns span {
+  display: block;
+  width: 3px;
+  height: 9px;
+  border-radius: 0 2px 2px 0;
+  background: inherit;
+  filter: brightness(0.78);
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,0.1);
+}
+
+/* Screen */
+.phone-screen {
+  flex: 1;
+  margin: 3px;
+  border-radius: calc(var(--ph-r) - 3px);
+  background: #0a0a12;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  position: relative;
+}
+
+/* Dynamic Island */
+.ph-island {
+  position: absolute;
+  top: 6px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 22px;
+  height: 7px;
+  background: #000;
+  border-radius: var(--r-pill);
+  z-index: 2;
+}
+
+/* Pill notch (iPhone 15/14) */
+.ph-notch-pill {
+  position: absolute;
+  top: 5px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 16px;
+  height: 5px;
+  background: #000;
+  border-radius: var(--r-pill);
+  z-index: 2;
+}
+
+/* Wide notch (iPhone 12/13) */
+.ph-notch-wide {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 24px;
+  height: 8px;
+  background: #000;
+  border-radius: 0 0 6px 6px;
+  z-index: 2;
+}
+
+/* Home bar (iPhone SE) */
+.ph-home-bar {
+  position: absolute;
+  bottom: 4px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 18px;
+  height: 3px;
+  background: rgba(255,255,255,0.25);
+  border-radius: var(--r-pill);
+  z-index: 2;
+}
+
+/* Screen wallpapers – abstract gradient fills */
+.ph-content {
+  flex: 1;
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+}
+
+.ph-wallpaper-a { background: linear-gradient(135deg, #1a1a3e 0%, #0f3460 50%, #16213e 100%); }
+.ph-wallpaper-b { background: linear-gradient(135deg, #0f0c29 0%, #302b63 50%, #24243e 100%); }
+.ph-wallpaper-c { background: linear-gradient(145deg, #1a0533 0%, #6b21a8 60%, #1e1b4b 100%); }
+.ph-wallpaper-d { background: linear-gradient(135deg, #0c1a2e 0%, #1e3a5f 50%, #0a2540 100%); }
+.ph-wallpaper-e { background: linear-gradient(145deg, #0a1628 0%, #16213e 40%, #0f3460 100%); }
+.ph-wallpaper-f { background: linear-gradient(135deg, #10002b 0%, #3c096c 50%, #7b2d8b 100%); }
+
+/* Small screen content lines for realism */
+.ph-content::after {
+  content: '';
+  position: absolute;
+  bottom: 10px;
+  left: 6px;
+  right: 6px;
+  height: 2px;
+  background: rgba(255,255,255,0.07);
+  border-radius: 2px;
+}
+
+.ph-content::before {
+  content: '';
+  position: absolute;
+  bottom: 16px;
+  left: 8px;
+  right: 14px;
+  height: 2px;
+  background: rgba(255,255,255,0.05);
+  border-radius: 2px;
+}
+
+/* ── PHONE COLOR PALETTE ────────────────────────────────────────── */
+
+/* iPhone 15 Pro Max / Black Titanium */
+.color-black-titanium {
+  background: #1c1c1e;
+  background-image: linear-gradient(145deg, #2c2c2e 0%, #1c1c1e 40%, #111 100%);
+}
+
+/* iPhone 15 Pro / Natural Titanium */
+.color-natural-titanium {
+  background: #b8b3a8;
+  background-image: linear-gradient(145deg, #cdc8bc 0%, #b8b3a8 40%, #a09b91 100%);
+}
+
+/* iPhone 15 Pro / White Titanium */
+.color-white-titanium {
+  background: #e8e4dc;
+  background-image: linear-gradient(145deg, #f2efe8 0%, #e8e4dc 50%, #d8d4cc 100%);
+}
+
+/* iPhone 15 Pro / Blue Titanium */
+.color-blue-titanium {
+  background: #4a5e7a;
+  background-image: linear-gradient(145deg, #5a7090 0%, #4a5e7a 50%, #3a4e6a 100%);
+}
+
+/* Pink */
+.color-pink {
+  background: #f9a8c9;
+  background-image: linear-gradient(145deg, #fbbdd8 0%, #f9a8c9 50%, #f08cb8 100%);
+}
+
+/* Yellow */
+.color-yellow {
+  background: #f5e84a;
+  background-image: linear-gradient(145deg, #f8ee6a 0%, #f5e84a 50%, #e8d830 100%);
+}
+
+/* Green */
+.color-green {
+  background: #4ade80;
+  background-image: linear-gradient(145deg, #6ef598 0%, #4ade80 50%, #36c268 100%);
+}
+
+/* Blue */
+.color-blue {
+  background: #60a5fa;
+  background-image: linear-gradient(145deg, #7dbcfc 0%, #60a5fa 50%, #4090e8 100%);
+}
+
+/* Steel Blue (iPhone 14) */
+.color-steel-blue {
+  background: #517fa4;
+  background-image: linear-gradient(145deg, #6696bc 0%, #517fa4 50%, #3d698e 100%);
+}
+
+/* Midnight */
+.color-midnight {
+  background: #1a1a2e;
+  background-image: linear-gradient(145deg, #262640 0%, #1a1a2e 50%, #101020 100%);
+}
+
+/* Starlight */
+.color-starlight {
+  background: #f0e8d8;
+  background-image: linear-gradient(145deg, #f8f0e8 0%, #f0e8d8 50%, #e0d8c8 100%);
+}
+
+/* Purple (iPhone 14) */
+.color-purple {
+  background: #a78bfa;
+  background-image: linear-gradient(145deg, #c4a8fc 0%, #a78bfa 50%, #8b6fe8 100%);
+}
+
+/* Deep Purple (iPhone 14 Pro) */
+.color-deep-purple {
+  background: #4c1d95;
+  background-image: linear-gradient(145deg, #6d28d9 0%, #4c1d95 50%, #2e1065 100%);
+}
+
+/* Space Black */
+.color-space-black {
+  background: #1c1917;
+  background-image: linear-gradient(145deg, #2c2820 0%, #1c1917 50%, #0f0d0a 100%);
+}
+
+/* Silver */
+.color-silver {
+  background: #c8c8cc;
+  background-image: linear-gradient(145deg, #e0e0e4 0%, #c8c8cc 50%, #b0b0b4 100%);
+}
+
+/* Red / Product RED */
+.color-red {
+  background: #dc2626;
+  background-image: linear-gradient(145deg, #ef4444 0%, #dc2626 50%, #b91c1c 100%);
+}
+
+/* Gold */
+.color-gold {
+  background: #d4a847;
+  background-image: linear-gradient(145deg, #e8be60 0%, #d4a847 50%, #c09030 100%);
+}
+
+/* Graphite */
+.color-graphite {
+  background: #4b5563;
+  background-image: linear-gradient(145deg, #6b7585 0%, #4b5563 50%, #374151 100%);
+}
+
+/* Sierra Blue */
+.color-sierra-blue {
+  background: #7fb5cc;
+  background-image: linear-gradient(145deg, #9ccde4 0%, #7fb5cc 50%, #62a0b8 100%);
+}
+
+/* iPhone 13 Pink */
+.color-pink-13 {
+  background: #f4a4b4;
+  background-image: linear-gradient(145deg, #f8c0cc 0%, #f4a4b4 50%, #e88898 100%);
+}
+
+/* iPhone 13 Green */
+.color-green-13 {
+  background: #2d6a4f;
+  background-image: linear-gradient(145deg, #40916c 0%, #2d6a4f 50%, #1b4332 100%);
+}
+
+/* iPhone 12 Purple */
+.color-purple-12 {
+  background: #c4b5fd;
+  background-image: linear-gradient(145deg, #ddd6fe 0%, #c4b5fd 50%, #a78bfa 100%);
+}
+
+/* ── TOOLTIP ─────────────────────────────────────────────────────── */
+.phone-tooltip {
+  position: fixed;
+  z-index: 200;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  padding: var(--sp-2) var(--sp-3);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  pointer-events: none;
+  opacity: 0;
+  transform: translateY(6px) scale(0.95);
+  transition: opacity var(--t-fast) ease, transform var(--t-fast) ease;
+  backdrop-filter: blur(12px);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+}
+
+.phone-tooltip.visible {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+
+.tt-name {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.tt-price {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--accent);
+}
+
+/* ── FILTER BAR ──────────────────────────────────────────────────── */
+.filter-bar {
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  padding: var(--sp-2) var(--sp-3);
+  background: rgba(16,16,24,0.9);
+  backdrop-filter: blur(20px) saturate(160%);
+  -webkit-backdrop-filter: blur(20px) saturate(160%);
+  border: 1px solid var(--border);
+  border-radius: var(--r-pill);
+  box-shadow:
+    0 8px 32px rgba(0,0,0,0.5),
+    0 0 0 1px rgba(255,255,255,0.04) inset;
+  white-space: nowrap;
+  max-width: calc(100vw - 40px);
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.filter-bar::-webkit-scrollbar { display: none; }
+
+.filter-add {
+  flex-shrink: 0;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-secondary);
+  transition: background var(--t-fast) ease, color var(--t-fast) ease,
+              transform var(--t-fast) var(--ease-spring);
+}
+
+.filter-add:hover {
+  background: var(--accent);
+  color: #fff;
+  border-color: var(--accent);
+  transform: scale(1.1) rotate(45deg);
+}
+
+.filter-chips {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+}
+
+.chip {
+  height: 32px;
+  padding: 0 var(--sp-3);
+  border-radius: var(--r-pill);
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  color: var(--text-secondary);
+  background: transparent;
+  border: 1px solid var(--border);
+  transition:
+    background var(--t-fast) ease,
+    color var(--t-fast) ease,
+    border-color var(--t-fast) ease,
+    transform var(--t-fast) var(--ease-spring);
+  white-space: nowrap;
+}
+
+.chip:hover {
+  color: var(--text-primary);
+  border-color: rgba(255,255,255,0.2);
+  transform: translateY(-1px);
+}
+
+.chip.active {
+  background: var(--text-primary);
+  color: var(--bg);
+  border-color: transparent;
+  font-weight: 600;
+}
+
+.chip.active:hover {
+  background: #fff;
+  transform: translateY(-1px);
+}
+
+.filter-count {
+  flex-shrink: 0;
+  padding-left: var(--sp-2);
+  border-left: 1px solid var(--border);
+  font-size: 11px;
+  font-family: var(--font-mono);
+  color: var(--text-tertiary);
+  letter-spacing: 0.04em;
+}
+
+#countNum {
+  color: var(--accent);
+  font-weight: 700;
+}
+
+/* ── ITEM ENTRANCE ANIMATION ─────────────────────────────────────── */
+@keyframes phone-enter {
+  from {
+    opacity: 0;
+    transform: translateY(24px) scale(0.85);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.phone-item {
+  animation: phone-enter var(--t-slow) var(--ease-spring) both;
+}
+
+/* ── FILTER HIDE / SHOW ──────────────────────────────────────────── */
+.phone-item.hidden {
+  animation: phone-exit 200ms var(--ease-out) both;
+  pointer-events: none;
+}
+
+@keyframes phone-exit {
+  from { opacity: 1; transform: scale(1); }
+  to   { opacity: 0; transform: scale(0.8) translateY(8px); }
+}
+
+/* ── REDUCED MOTION ──────────────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+
+  .ticker-track { animation: none; }
+  .ambient-glow { animation: none; }
+  .live-dot     { animation: none; }
+}
+
+/* ── RESPONSIVE ──────────────────────────────────────────────────── */
+@media (max-width: 600px) {
+  :root {
+    --ph-w:   44px;
+    --ph-h:   76px;
+    --ph-mini-w: 36px;
+    --ph-mini-h: 62px;
+  }
+
+  .header-nav { display: none; }
+
+  .site-header { padding: 0 var(--sp-4); }
+
+  .cloud-row { gap: var(--sp-1); }
+
+  .row-xl { max-width: 340px; }
+  .row-lg { max-width: 290px; }
+  .row-md { max-width: 240px; }
+  .row-sm { max-width: 200px; }
+  .row-xs { max-width: 160px; }
+
+  .grid-label { top: 88px; right: var(--sp-3); }
+  .grid-label-num { font-size: 22px; }
+}
+
+@media (min-width: 1200px) {
+  :root {
+    --ph-w:   60px;
+    --ph-h:   104px;
+    --ph-r:   11px;
+    --ph-mini-w: 50px;
+    --ph-mini-h: 86px;
+  }
+
+  .cloud-row { gap: var(--sp-3); }
+
+  .row-xl { max-width: 760px; }
+  .row-lg { max-width: 660px; }
+  .row-md { max-width: 560px; }
+  .row-sm { max-width: 440px; }
+  .row-xs { max-width: 320px; }
+}
